@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Create Vite + React project
-npm create vite@latest my-app -- --template react
+npm create vite@latest .
 cd my-app
 
 # Install React Router
-npm install react-router-dom@latest
+npm i react-router
 
 # Install Tailwind CSS and initialize config
 npm install -D tailwindcss@latest postcss@latest autoprefixer@latest
