@@ -144,6 +144,19 @@ export interface EmployeeDTO {
     statusLogs: StatusLogDTO[];
 };
 
+export interface EmployeeDetailDTO {
+    userGroup: UserGroupDTO;
+    name: string;
+    username: string;
+    password: string;
+    description: string;
+    email: string;
+    phone: string;
+    createdAt: string; // Timestamp as ISO string
+    isActive: boolean;
+    failedLoginCount: number;
+}
+
 export interface ValidationResult {
     fieldErrors: Record<string, string>;
 };
