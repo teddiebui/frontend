@@ -14,8 +14,8 @@ const authService = {
     logout(): Promise<APIResultSet<void>> {
         return httpClient.get<void>(LOGOUT_URL)
     },
-    me(): Promise<APIResultSet<Partial<EmployeeDTO>>> {
-        return httpClient.get<Partial<EmployeeDTO>>(ME_URL)
+    me(): Promise<APIResultSet<EmployeeDTO>> {
+        return httpClient.get<EmployeeDTO>(ME_URL)
     },
 }
 

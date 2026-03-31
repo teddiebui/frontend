@@ -8,10 +8,12 @@ type ResponseInterceptor = <T>(result: APIResultSet<T>) => APIResultSet<T> | Pro
 
 const requestInterceptors: RequestInterceptor[] = [];
 const responseInterceptors: ResponseInterceptor[] = [];
-
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+const SCHEME = import.meta.env.VITE_SCHEME || 'http';
 // --- Helpers ---
 
 function buildUrl(url: string, params?: RequestConfig['params']): string {
+    url = `${SCHEME}://${BASE_URL}${url}`;
     if (!params || Object.keys(params).length === 0) return url;
 
     const query = new URLSearchParams(
@@ -21,7 +23,9 @@ function buildUrl(url: string, params?: RequestConfig['params']): string {
         ),
     ).toString();
 
-    return url.includes('?') ? `${url}&${query}` : `${url}?${query}`;
+    return url.includes('?')
+     ? `${url}&${query}` 
+    : `${url}?${query}`;
 }
 
 async function parseBody(res: Response): Promise<unknown> {
@@ -61,6 +65,8 @@ async function request<T = unknown>(config: RequestConfig): Promise<APIResultSet
     };
 
     try {
+        
+        console.log("request url:", buildUrl(url, params));
         const res = await fetch(buildUrl(url, params), fetchOptions);
         clearTimeout(timeoutId);
 
