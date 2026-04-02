@@ -4,6 +4,7 @@ import { AuthProvider } from './auth/AuthContext';
 import Login from './pages/Login';
 import Layout from './pages/Layout';
 import TodayStaff from './pages/TodayStaff';
+import TodayTicket from './pages/TodayTicket_temp';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
             <Route path="/" element={<Layout />}>
               <Route index element={<Navigate to="/today-staff" replace />} />
               <Route path="today-staff" element={<TodayStaff />} />
+              <Route path="today-ticket" element={<TodayTicket />} />
               <Route path="/*" element={<><h3>Not Found</h3></>} />
             </Route>
           </Route>
