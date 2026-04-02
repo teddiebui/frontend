@@ -13,7 +13,11 @@ const SCHEME = import.meta.env.VITE_SCHEME || 'http';
 // --- Helpers ---
 
 function buildUrl(url: string, params?: RequestConfig['params']): string {
-    url = `${SCHEME}://${BASE_URL}${url}`;
+    const base = BASE_URL.startsWith('http')
+        ? BASE_URL
+        : `${SCHEME}://${BASE_URL}`;
+    url = url.startsWith('/') ? url : `/${url}`;
+    url = `${base}${url}`;
     if (!params || Object.keys(params).length === 0) return url;
 
     const query = new URLSearchParams(
@@ -24,8 +28,8 @@ function buildUrl(url: string, params?: RequestConfig['params']): string {
     ).toString();
 
     return url.includes('?')
-     ? `${url}&${query}` 
-    : `${url}?${query}`;
+        ? `${url}&${query}`
+        : `${url}?${query}`;
 }
 
 async function parseBody(res: Response): Promise<unknown> {
@@ -65,7 +69,7 @@ async function request<T = unknown>(config: RequestConfig): Promise<APIResultSet
     };
 
     try {
-        
+
         console.log("request url:", buildUrl(url, params));
         const res = await fetch(buildUrl(url, params), fetchOptions);
         clearTimeout(timeoutId);
@@ -110,7 +114,7 @@ export const httpClient = {
         return request<T>({ ...config, url, method: 'PATCH', data });
     },
 
-    delete<T = unknown>(url: string, config: ShorthandConfig = {}) {
+    delete<T = unknown>(url: string, data?: unknown, config: ShorthandConfig = {}) {
         return request<T>({ ...config, url, method: 'DELETE' });
     },
 

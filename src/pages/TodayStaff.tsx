@@ -6,6 +6,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useEmployee } from '@/hooks/useEmployee';
+import { toast } from 'sonner';
 
 function formatTime(from: string): string {
     // from: ISO string, format to HH:mm:ss
@@ -19,6 +20,21 @@ export default function TodayStaff() {
     useEffect(() => {
         fetchDashboard();
     }, [fetchDashboard]);
+
+    // Toast khi fetch thành công
+    useEffect(() => {
+        if (dashboard) {
+            toast.success('Dashboard tải thành công!');
+        }
+    }, [dashboard]);
+
+    // Toast khi fetch thất bại
+    useEffect(() => {
+        if (error) {
+            toast.error('Dashboard tải thất bại!');
+        }
+    }, [error]);
+
 
     return (
         <div className="dashboard-content page-main-content d-flex flex-column">
