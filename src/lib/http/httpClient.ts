@@ -98,8 +98,8 @@ async function request<T = unknown>(config: RequestConfig): Promise<APIResultSet
 export const httpClient = {
     request,
 
-    get<T = unknown>(url: string, config: ShorthandConfig = {}) {
-        return request<T>({ ...config, url, method: 'GET' });
+    get<T = unknown>(url: string, data?:unknown, config: ShorthandConfig = {}) {
+        return request<T>({ ...config, url, method: 'GET', data });
     },
 
     post<T = unknown>(url: string, data?: unknown, config: ShorthandConfig = {}) {
@@ -115,7 +115,7 @@ export const httpClient = {
     },
 
     delete<T = unknown>(url: string, data?: unknown, config: ShorthandConfig = {}) {
-        return request<T>({ ...config, url, method: 'DELETE' });
+        return request<T>({ ...config, url, method: 'DELETE', data });
     },
 
     // Interceptor registration
