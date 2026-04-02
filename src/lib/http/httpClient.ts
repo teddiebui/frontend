@@ -98,23 +98,23 @@ async function request<T = unknown>(config: RequestConfig): Promise<APIResultSet
 export const httpClient = {
     request,
 
-    get<T = unknown>(url: string, data?:unknown, config: ShorthandConfig = {}) {
+    get<T = unknown>(url: string, data?:unknown, config: ShorthandConfig = {}): Promise<APIResultSet<T>> {
         return request<T>({ ...config, url, method: 'GET', data });
     },
 
-    post<T = unknown>(url: string, data?: unknown, config: ShorthandConfig = {}) {
+    post<T = unknown>(url: string, data?: unknown, config: ShorthandConfig = {}): Promise<APIResultSet<T>> {
         return request<T>({ ...config, url, method: 'POST', data });
     },
 
-    put<T = unknown>(url: string, data?: unknown, config: ShorthandConfig = {}) {
+    put<T = unknown>(url: string, data?: unknown, config: ShorthandConfig = {}): Promise<APIResultSet<T>> {
         return request<T>({ ...config, url, method: 'PUT', data });
     },
 
-    patch<T = unknown>(url: string, data?: unknown, config: ShorthandConfig = {}) {
+    patch<T = unknown>(url: string, data?: unknown, config: ShorthandConfig = {}): Promise<APIResultSet<T>> {
         return request<T>({ ...config, url, method: 'PATCH', data });
     },
 
-    delete<T = unknown>(url: string, data?: unknown, config: ShorthandConfig = {}) {
+    delete<T = unknown>(url: string, data?: unknown, config: ShorthandConfig = {}): Promise<APIResultSet<T>> {
         return request<T>({ ...config, url, method: 'DELETE', data });
     },
 
