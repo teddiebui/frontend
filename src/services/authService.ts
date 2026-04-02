@@ -1,5 +1,5 @@
-import { httpClient } from "../http/httpClient"
-import type { APIResultSet, EmployeeDTO, LoginRequestDTO, LoginResponseDTO } from "../../types"
+import { httpClient } from "../lib/http/httpClient"
+import type { APIResultSet, EmployeeDTO, LoginRequestDTO, LoginResponseDTO } from "../types"
 
 
 const BASE_URL= import.meta.env.VITE_BASE_AUTH_URL || "/api/auth"

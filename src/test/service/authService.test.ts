@@ -1,6 +1,6 @@
 // api.test.js
 import type { APIResultSet, EmployeeDTO, LoginResponseDTO } from '@/types';
-import authService from '@/lib/services/authService';
+import authService from '@/services/authService';
 import { describe, it, expect } from 'vitest';
 
 
