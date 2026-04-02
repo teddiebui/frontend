@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import type { EmployeeDTO } from '@/lib/http/types';
+import type { EmployeeDTO } from '@/types';
 import authService from '@/lib/services/authService';
 
 interface AuthContextType {

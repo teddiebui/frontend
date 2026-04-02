@@ -1,6 +1,6 @@
 // src/lib/http/httpClient.ts
-import { NetworkError } from './types';
-import type { APIResultSet, RequestConfig, ShorthandConfig } from './types';
+import { NetworkError } from '../../types';
+import type { APIResultSet, RequestConfig, ShorthandConfig } from '../../types';
 
 // --- Interceptors ---
 type RequestInterceptor = (config: RequestConfig) => RequestConfig | Promise<RequestConfig>;
