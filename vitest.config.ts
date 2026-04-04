@@ -6,6 +6,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
+    watch: false,
     coverage: {
       exclude: [
         'src/lib/http/httpClient.ts',
