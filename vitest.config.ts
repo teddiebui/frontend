@@ -6,10 +6,17 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
+    coverage: {
+      exclude: [
+        'src/lib/http/httpClient.ts',
+        'src/types/index.ts',
+      ],
+    }
   },
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
     },
   },
+
 })
