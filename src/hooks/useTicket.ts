@@ -26,7 +26,7 @@ export function useTicket() {
     setLoading(true);
     setError(null);
     try {
-      const res = await ticketService.dashboard();
+      const res = await ticketService.dashboard() as APIResultSet<TicketDashboardDTO[]>;
       if (res.success && res.data) {
         setDashboard(res.data);
       } else {
@@ -44,7 +44,8 @@ export function useTicket() {
     setLoading(true);
     setError(null);
     try {
-      const res = await ticketService.search(criteria, page, size);
+      let res: APIResultSet<PaginationResponse<TicketListDTO>>;
+      res = await ticketService.search(criteria, page, size) as APIResultSet<PaginationResponse<TicketListDTO>>;
       if (res.success && res.data) {
         setTickets(res.data.content);
         setPagination(res.data);
@@ -63,7 +64,7 @@ export function useTicket() {
     setLoading(true);
     setError(null);
     try {
-      const res = await ticketService.getById(id);
+      const res = await ticketService.getById(id) as APIResultSet<TicketDetailDTO>;
       if (res.success && res.data) {
         setDetail(res.data);
       } else {
@@ -81,7 +82,7 @@ export function useTicket() {
     setLoading(true);
     setError(null);
     try {
-      const res = await ticketService.addNote(ticketId, note);
+      const res = await ticketService.addNote(ticketId, note) as APIResultSet<NoteDTO>;
       if (res.success) {
         await fetchNotes(ticketId);
       } else {
@@ -99,7 +100,7 @@ export function useTicket() {
     setLoading(true);
     setError(null);
     try {
-      const res = await ticketService.removeNote(ticketId, noteId);
+      const res = await ticketService.removeNote(ticketId, noteId) as APIResultSet<NoteDTO>;
       if (res.success) {
         await fetchNotes(ticketId);
       } else {
@@ -117,7 +118,7 @@ export function useTicket() {
     setLoading(true);
     setError(null);
     try {
-      const res = await ticketService.getAllNotes(ticketId);
+      const res = await ticketService.getAllNotes(ticketId) as APIResultSet<NoteDTO[]>;
       if (res.success && res.data) {
         setNotes(Array.from(res.data));
       } else {
@@ -135,7 +136,7 @@ export function useTicket() {
     setLoading(true);
     setError(null);
     try {
-      const res = await ticketService.getForEvaluation();
+      const res = await ticketService.getForEvaluation() as APIResultSet<TicketReportDTO[]>;
       if (res.success && res.data) {
         setReport(res.data);
       } else {
@@ -153,7 +154,7 @@ export function useTicket() {
     setLoading(true);
     setError(null);
     try {
-      const res = await ticketService.exportExcel(criteria);
+      const res = await ticketService.exportExcel(criteria) as APIResultSet<Blob>;
       if (res.success && res.data) {
         return res.data;
       } else {
