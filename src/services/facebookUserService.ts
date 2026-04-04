@@ -1,61 +1,45 @@
-import { httpClient } from '@/lib/http/httpClient';
+import { httpClient } from '../lib/http/httpClient';
 import type {
   APIResultSet,
-  FacebookUserListDTO,
   FacebookUserDetailDTO,
+  FacebookUserListDTO,
   FacebookUserSearchCriteria,
   PaginationResponse
-} from '@/types';
+} from '../types';
 
-const BASE_PATH = import.meta.env.VITE_BASE_FACEBOOK_EMPLOYEE_PATH || '/facebookuser';
+const API_BASE_FACEBOOK_USER_URL = '/facebookuser';
 
-
-// Service for FacebookUser API
 export const facebookUserService = {
-  // GET /api/[BASE_PATH]? (get all)
-  getAll: async (): Promise<APIResultSet<FacebookUserListDTO[]>> => {
-    return httpClient.get(`${BASE_PATH}`);
-  },
+  ping: () => httpClient.get<string>(`${API_BASE_FACEBOOK_USER_URL}/ping`),
 
-  // GET /api/[BASE_PATH]?id= (get by id)
-  get: async (id: string): Promise<APIResultSet<FacebookUserDetailDTO>> => {
-    return httpClient.get(`${BASE_PATH}`, { id });
-  },
+  getAll: (): Promise<APIResultSet<FacebookUserListDTO[]>> =>
+    httpClient.get<FacebookUserListDTO[]>(`${API_BASE_FACEBOOK_USER_URL}`),
 
-  // POST /api/[BASE_PATH] (create)
-  create: async (user: FacebookUserDetailDTO): Promise<APIResultSet<FacebookUserDetailDTO>> => {
-    return httpClient.post(`${BASE_PATH}`, user);
-  },
+  getById: (id: string): Promise<APIResultSet<FacebookUserDetailDTO>> =>
+    httpClient.get<FacebookUserDetailDTO>(`${API_BASE_FACEBOOK_USER_URL}`, { params: { id } }),
 
-  // PUT /api/[BASE_PATH] (update)
-  update: async (user: FacebookUserDetailDTO): Promise<APIResultSet<FacebookUserDetailDTO>> => {
-    return httpClient.put(`${BASE_PATH}`, user);
-  },
+  create: (user: FacebookUserDetailDTO): Promise<APIResultSet<FacebookUserDetailDTO>> =>
+    httpClient.post<FacebookUserDetailDTO>(`${API_BASE_FACEBOOK_USER_URL}`, user),
 
-  // GET /api/[BASE_PATH]/search (search)
-  search: async (
+  update: (user: FacebookUserDetailDTO): Promise<APIResultSet<FacebookUserDetailDTO>> =>
+    httpClient.put<FacebookUserDetailDTO>(`${API_BASE_FACEBOOK_USER_URL}`, user),
+
+  search: (
     criteria: Partial<FacebookUserSearchCriteria>,
-    pageable?: Record<string, unknown>
-  ): Promise<APIResultSet<PaginationResponse<FacebookUserDetailDTO>>> => {
-    return httpClient.get(`${BASE_PATH}/search`, { ...criteria, ...pageable });
-  },
+    page: number = 0,
+    size: number = 10
+  ): Promise<APIResultSet<PaginationResponse<FacebookUserDetailDTO>>> =>
+    httpClient.get<PaginationResponse<FacebookUserDetailDTO>>(
+      `${API_BASE_FACEBOOK_USER_URL}/search`,
+      { params: { ...criteria, page, size } }
+    ),
 
-  // DELETE /api/[BASE_PATH]?id= (delete by id)
-  delete: async (id: string): Promise<APIResultSet<void>> => {
-    return httpClient.delete(`${BASE_PATH}`, { id });
-  },
+  delete: (id: string): Promise<APIResultSet<void>> =>
+    httpClient.delete<void>(`${API_BASE_FACEBOOK_USER_URL}`, { params: { id } }),
 
-  // GET /api/[BASE_PATH]/export-excel (export)
-  exportExcel: async (criteria: Partial<FacebookUserSearchCriteria>): Promise<Blob> => {
-    const url = `${BASE_PATH}/export-excel`;
-    const params = new URLSearchParams(criteria as Record<string, string>).toString();
-    const res = await fetch(`${url}?${params}`, { credentials: 'include' });
-    if (!res.ok) throw new Error('Failed to export Excel');
-    return await res.blob();
-  },
+  exportExcel: (criteria: Partial<FacebookUserSearchCriteria>) =>
+    httpClient.get<Blob>(`${API_BASE_FACEBOOK_USER_URL}/export-excel`, { params: { ...criteria } }),
 
-  // DELETE /api/[BASE_PATH]/delete-all (delete all by ids)
-  deleteAll: async (ids: string[]): Promise<APIResultSet<void>> => {
-    return httpClient.delete(`${BASE_PATH}/delete-all`, ids);
-  },
+  deleteAll: (ids: string[]): Promise<APIResultSet<void>> =>
+    httpClient.delete<void>(`${API_BASE_FACEBOOK_USER_URL}/delete-all`, { data: ids }),
 };
