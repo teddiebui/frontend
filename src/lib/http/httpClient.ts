@@ -38,6 +38,11 @@ async function parseBody(res: Response): Promise<unknown> {
     if (res.status === 204 || !contentType) return null;
     if (contentType.includes('application/json')) return res.json();
 
+    if (contentType.includes('application/octet-stream') ||
+        contentType.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')) {
+        return res.blob(); // ✅ QUAN TRỌNG
+    }
+
     return res.text();
 }
 
@@ -98,7 +103,7 @@ async function request<T = unknown>(config: RequestConfig): Promise<APIResultSet
 export const httpClient = {
     request,
 
-    get<T = unknown>(url: string, data?:unknown, config: ShorthandConfig = {}): Promise<APIResultSet<T>> {
+    get<T = unknown>(url: string, data?: unknown, config: ShorthandConfig = {}): Promise<APIResultSet<T>> {
         return request<T>({ ...config, url, method: 'GET', data });
     },
 
