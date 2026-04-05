@@ -76,7 +76,7 @@ describe('facebookUserService', () => {
       message: '',
     });
 
-    const res = await facebookUserService.getById('1');
+    const res = await facebookUserService.get('1');
 
     expect(mockedHttp.get).toHaveBeenCalledWith('/facebookuser', { params: { id: '1' } });
     expect(res.data?.facebookId).toBe('1');
