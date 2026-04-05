@@ -4,7 +4,7 @@ import { AuthProvider } from './auth/AuthContext';
 import Login from './pages/Login';
 import Layout from './pages/Layout';
 import TodayStaff from './pages/TodayStaff';
-import TodayTicket from './pages/TodayTicket_temp';
+import TodayTicket from './pages/TodayTicket';
 
 function App() {
   return (
