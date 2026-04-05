@@ -136,13 +136,18 @@ describe('facebookUserService', () => {
 
     const res = await facebookUserService.search(filter, 0, 10);
 
-    expect(mockedHttp.get).toHaveBeenCalledWith('/facebookuser/search', {
-      params: {
-        ...filter,
-        page: 0,
-        size: 10,
-      },
-    });
+
+    expect(mockedHttp.get).toHaveBeenCalledWith(
+      '/facebookuser/search',
+      expect.objectContaining({
+        params: expect.objectContaining({
+          ...filter,
+          page: 0,
+          size: 10,
+          sort: expect.any(String),
+        }),
+      })
+    );
 
     expect(res.data?.content).toHaveLength(1);
   });
