@@ -51,7 +51,7 @@ export function useFacebookUser() {
     setLoading(true);
     setError(null);
     try {
-      const res = await facebookUserService.getById(id);
+      const res = await facebookUserService.get(id);
       if (res.data) setUserDetail(res.data);
       else setError(res.message);
     } catch (err) {
