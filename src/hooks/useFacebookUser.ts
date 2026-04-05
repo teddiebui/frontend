@@ -1,133 +1,150 @@
-import { useCallback, useState } from 'react';
-import { facebookUserService } from '../services/facebookUserService';
+
+// src/hooks/useFacebookUser.ts
+// Hook for managing Facebook user state and side effects
+
+import { useState, useCallback } from "react";
+import { facebookUserService } from "@/services/facebookUserService";
 import type {
   FacebookUserListDTO,
   FacebookUserDetailDTO,
   FacebookUserSearchCriteria,
   PaginationResponse
-} from '../types';
+} from "@/types";
 
 export function useFacebookUser() {
   const [users, setUsers] = useState<FacebookUserListDTO[]>([]);
-  const [detail, setDetail] = useState<FacebookUserDetailDTO | null>(null);
-  const [pagination, setPagination] = useState<PaginationResponse<FacebookUserDetailDTO> | null>(null);
+  const [userDetail, setUserDetail] = useState<FacebookUserDetailDTO | null>(null);
+  const [searchResult, setSearchResult] = useState<PaginationResponse<FacebookUserDetailDTO> | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Health check
+  const ping = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await facebookUserService.ping();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unexpected error");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Get all users
   const fetchAll = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const res = await facebookUserService.getAll();
-      if (res.success && res.data) {
-        setUsers(res.data);
-      } else {
-        setError(res.message || 'Lỗi lấy danh sách Facebook users');
-      }
+      if (res.data) setUsers(res.data);
+      else setError(res.message);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unexpected error');
+      setError(err instanceof Error ? err.message : "Unexpected error");
     } finally {
       setLoading(false);
     }
   }, []);
 
+  // Get user by id
   const fetchById = useCallback(async (id: string) => {
     setLoading(true);
     setError(null);
     try {
       const res = await facebookUserService.getById(id);
-      if (res.success && res.data) {
-        setDetail(res.data);
-      } else {
-        setError(res.message || 'Lỗi lấy chi tiết Facebook user');
-      }
+      if (res.data) setUserDetail(res.data);
+      else setError(res.message);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unexpected error');
+      setError(err instanceof Error ? err.message : "Unexpected error");
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const search = useCallback(async (
-    criteria: Partial<FacebookUserSearchCriteria>,
-    page = 0,
-    size = 10
-  ) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await facebookUserService.search(criteria, page, size);
-      if (res.success && res.data) {
-        setPagination(res.data);
-      } else {
-        setError(res.message || 'Lỗi tìm kiếm Facebook users');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unexpected error');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
+  // Create user
   const create = useCallback(async (user: FacebookUserDetailDTO) => {
     setLoading(true);
     setError(null);
     try {
       const res = await facebookUserService.create(user);
-      if (res.success && res.data) {
-        setDetail(res.data);
-      } else {
-        setError(res.message || 'Lỗi tạo Facebook user');
-      }
+      if (res.data) setUserDetail(res.data);
+      else setError(res.message);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unexpected error');
+      setError(err instanceof Error ? err.message : "Unexpected error");
     } finally {
       setLoading(false);
     }
   }, []);
 
+  // Update user
   const update = useCallback(async (user: FacebookUserDetailDTO) => {
     setLoading(true);
     setError(null);
     try {
       const res = await facebookUserService.update(user);
-      if (res.success && res.data) {
-        setDetail(res.data);
-      } else {
-        setError(res.message || 'Lỗi cập nhật Facebook user');
-      }
+      if (res.data) setUserDetail(res.data);
+      else setError(res.message);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unexpected error');
+      setError(err instanceof Error ? err.message : "Unexpected error");
     } finally {
       setLoading(false);
     }
   }, []);
 
+  // Search users
+  const search = useCallback(async (criteria: Partial<FacebookUserSearchCriteria>, page = 0, size = 10, sort = "createdAt,desc") => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await facebookUserService.search(criteria, page, size);
+      if (res.data) setSearchResult(res.data);
+      else setError(res.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unexpected error");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Delete user by id
   const remove = useCallback(async (id: string) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await facebookUserService.delete(id);
-      if (!res.success) {
-        setError(res.message || 'Lỗi xóa Facebook user');
-      }
+      await facebookUserService.delete(id);
+      setUserDetail(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unexpected error');
+      setError(err instanceof Error ? err.message : "Unexpected error");
     } finally {
       setLoading(false);
     }
   }, []);
 
+  // Export to Excel
+  const exportExcel = useCallback(async (criteria: Partial<FacebookUserSearchCriteria>) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await facebookUserService.exportExcel(criteria);
+      // handle blob download in UI
+      return res;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unexpected error");
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Delete multiple users
   const removeAll = useCallback(async (ids: string[]) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await facebookUserService.deleteAll(ids);
-      if (!res.success) {
-        setError(res.message || 'Lỗi xóa nhiều Facebook users');
-      }
+      await facebookUserService.deleteAll(ids);
+      setUserDetail(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unexpected error');
+      setError(err instanceof Error ? err.message : "Unexpected error");
     } finally {
       setLoading(false);
     }
@@ -135,16 +152,18 @@ export function useFacebookUser() {
 
   return {
     users,
-    detail,
-    pagination,
+    userDetail,
+    searchResult,
     loading,
     error,
+    ping,
     fetchAll,
     fetchById,
-    search,
     create,
     update,
+    search,
     remove,
+    exportExcel,
     removeAll,
   };
 }

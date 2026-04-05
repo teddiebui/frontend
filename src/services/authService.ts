@@ -2,20 +2,17 @@ import { httpClient } from "../lib/http/httpClient"
 import type { APIResultSet, EmployeeDTO, LoginRequestDTO, LoginResponseDTO } from "../types"
 
 
-const BASE_URL= import.meta.env.VITE_BASE_AUTH_URL || "/api/auth"
-const LOGIN_URL= `${BASE_URL}/login`
-const LOGOUT_URL= `${BASE_URL}/logout`
-const ME_URL= `${BASE_URL}/me`
+const BASE_URL= "/auth"
 
 const authService = {
     login(loginRequest: LoginRequestDTO): Promise<APIResultSet<LoginResponseDTO>> {
-        return httpClient.post<LoginResponseDTO>(LOGIN_URL, loginRequest)
+        return httpClient.post<LoginResponseDTO>(`${BASE_URL}/login`, loginRequest)
     },
     logout(): Promise<APIResultSet<void>> {
-        return httpClient.get<void>(LOGOUT_URL)
+        return httpClient.get<void>(`${BASE_URL}/logout`)
     },
     me(): Promise<APIResultSet<EmployeeDTO>> {
-        return httpClient.get<EmployeeDTO>(ME_URL)
+        return httpClient.get<EmployeeDTO>(`${BASE_URL}/me`)
     },
 }
 

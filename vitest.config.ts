@@ -4,15 +4,11 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   test: {
-    environment: 'jsdom',
-    globals: true,
     watch: false,
+    globals: true,
     coverage: {
-      exclude: [
-        'src/lib/http/httpClient.ts',
-        'src/types/index.ts',
-      ],
-    }
+      include: ['src/services/**/*.ts'],
+    },
   },
   resolve: {
     alias: {
