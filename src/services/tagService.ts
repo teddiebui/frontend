@@ -1,21 +1,31 @@
 import { httpClient } from '@/lib/http/httpClient';
 import type { APIResultSet, TagDTO } from '@/types';
 
-const API_BASE_TAG_URL = '/tag';
+const BASE_URL = '/api/tag';
 
 export const tagService = {
-  search: (keyword: string): Promise<APIResultSet<TagDTO[]>> =>
-    httpClient.get<TagDTO[]>(`${API_BASE_TAG_URL}/search`, undefined, { params: { keyword } }),
+  /** Search tags by keyword */
+  search(keyword: string): Promise<APIResultSet<TagDTO[]>> {
+    return httpClient.get<TagDTO[]>(`${BASE_URL}/search`, { params: { keyword } });
+  },
 
-  getAll: (): Promise<APIResultSet<TagDTO[]>> =>
-    httpClient.get<TagDTO[]>(`${API_BASE_TAG_URL}`),
+  /** Get all tags */
+  getAll(): Promise<APIResultSet<TagDTO[]>> {
+    return httpClient.get<TagDTO[]>(`${BASE_URL}`);
+  },
 
-  create: (tag: TagDTO): Promise<APIResultSet<TagDTO>> =>
-    httpClient.post<TagDTO>(`${API_BASE_TAG_URL}`, tag),
+  /** Create a new tag */
+  create(tag: TagDTO): Promise<APIResultSet<TagDTO>> {
+    return httpClient.post<TagDTO>(`${BASE_URL}`, tag);
+  },
 
-  update: (id: number, tag: TagDTO): Promise<APIResultSet<TagDTO>> =>
-    httpClient.put<TagDTO>(`${API_BASE_TAG_URL}/${id}`, tag),
+  /** Update a tag by id */
+  update(id: number, tag: TagDTO): Promise<APIResultSet<TagDTO>> {
+    return httpClient.put<TagDTO>(`${BASE_URL}/${id}`, tag);
+  },
 
-  delete: (id: number): Promise<APIResultSet<void>> =>
-    httpClient.delete<void>(`${API_BASE_TAG_URL}/${id}`),
+  /** Delete a tag by id */
+  delete(id: number): Promise<APIResultSet<void>> {
+    return httpClient.delete<void>(`${BASE_URL}/${id}`);
+  },
 };
