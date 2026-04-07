@@ -10,10 +10,14 @@ import Customer from './pages/Customer';
 import Performance from './pages/Performance';
 import Report from './pages/Report';
 import Setting from './pages/Setting';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 function App() {
+  const queryClient = new QueryClient();
+
   return (
-    <AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
       <BrowserRouter>
         <Routes>
           <Route element={<ProtectedRoute />}>
@@ -34,6 +38,7 @@ function App() {
         </Routes>
       </BrowserRouter>
     </AuthProvider>
+    </QueryClientProvider>
   );
 }
 
