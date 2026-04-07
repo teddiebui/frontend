@@ -1,25 +1,26 @@
-import { useState, useCallback } from "react";
+// src/hooks/useEmotion.ts
+// Hook quản lý state và side effect cho emotion, UI chỉ gọi hook này
+
+import { useQuery } from "@tanstack/react-query";
 import { emotionService } from "@/services/emotionService";
-import type { EmotionDTO } from "@/types";
+// import type { EmotionDTO } from "@/types";
 
 export function useEmotion() {
-  const [emotions, setEmotions] = useState<EmotionDTO[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Queries
+  const {
+    data: emotions,
+    isLoading: isEmotionsLoading,
+    error: emotionsError,
+    refetch: refetchEmotions
+  } = useQuery({
+    queryKey: ["emotions"],
+    queryFn: emotionService.getAll
+  });
 
-  const fetchAll = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await emotionService.getAll();
-      if (res.success && res.data) setEmotions(res.data);
-      else setError(res.message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  return { emotions, loading, error, fetchAll };
+  return {
+    emotions: emotions?.data ?? [],
+    emotionsLoading: isEmotionsLoading,
+    emotionsError,
+    refetchEmotions,
+  };
 }

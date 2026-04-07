@@ -1,222 +1,131 @@
 // src/hooks/useEmployee.ts
 // Hook quản lý state và side effect cho employee, UI chỉ gọi hook này
 
-import { useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { employeeService } from "@/services/employeeService";
 import type {
   EmployeeDTO,
-  EmployeeDetailDTO,
-  EmployeeDashboardDTO,
   StatusLogDTO,
   ChangePasswordDTO,
   ResetPasswordDTO
 } from "@/types";
 
 export function useEmployee() {
-  const [employees, setEmployees] = useState<EmployeeDTO[]>([]);
-  const [profile, setProfile] = useState<EmployeeDetailDTO | null>(null);
-  const [dashboard, setDashboard] = useState<EmployeeDashboardDTO[]>([]);
-  const [onlineStatus, setOnlineStatus] = useState<StatusLogDTO | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  // Lấy tất cả user
-  const fetchAll = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-      try {
-        const res = await employeeService.getAllUsers();
-        const { data, success, message } = res;
-        if (data && success) setEmployees(data);
-        else setError(message);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Unexpected error");
-      } finally {
-        setLoading(false);
-      }
-  }, []);
+  // Queries
+  const {
+    data: employees,
+    isLoading: isEmployeesLoading,
+    error: employeesError,
+    refetch: refetchEmployees
+  } = useQuery({
+    queryKey: ["employees"],
+    queryFn: employeeService.getAllUsers
+  });
 
-  // Lấy profile user hiện tại
-  const fetchProfile = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-      try {
-        const res = await employeeService.getUserProfile();
-        const { data, success, message } = res;
-        if (data && success) setProfile(data);
-        else setError(message);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Unexpected error");
-      } finally {
-        setLoading(false);
-      }
-  }, []);
+  const {
+    data: profile,
+    isLoading: isProfileLoading,
+    error: profileError,
+    refetch: refetchProfile
+  } = useQuery({
+    queryKey: ["employeeProfile"],
+    queryFn: employeeService.getUserProfile
+  });
 
-  // Lấy dashboard
-  const fetchDashboard = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-      try {
-        const res = await employeeService.dashboard();
-        const { data, success, message } = res;
-        if (data && success) setDashboard(data);
-        else setError(message);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Unexpected error");
-      } finally {
-        setLoading(false);
-      }
-  }, []);
+  const {
+    data: dashboard,
+    isLoading: isDashboardLoading,
+    error: dashboardError,
+    refetch: refetchDashboard
+  } = useQuery({
+    queryKey: ["employeeDashboard"],
+    queryFn: employeeService.dashboard
+  });
 
-  // Lấy online status
-  const fetchOnlineStatus = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-      try {
-        const res = await employeeService.getOnlineStatus();
-        const { data, success, message } = res;
-        if (data && success) setOnlineStatus(data);
-        else setError(message);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Unexpected error");
-      } finally {
-        setLoading(false);
-      }
-  }, []);
+  const {
+    data: onlineStatus,
+    isLoading: isOnlineStatusLoading,
+    error: onlineStatusError,
+    refetch: refetchOnlineStatus
+  } = useQuery({
+    queryKey: ["employeeOnlineStatus"],
+    queryFn: employeeService.getOnlineStatus
+  });
 
-  // Update cache
-  const updateCache = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-      try {
-        const res = await employeeService.updateCache();
-        const { data, success, message } = res;
-        if (data && success) setOnlineStatus(data);
-        else setError(message);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Unexpected error");
-      } finally {
-        setLoading(false);
-      }
-  }, []);
 
-  // Tạo user mới
-  const createUser = useCallback(async (employeeDTO: EmployeeDTO) => {
-    setLoading(true);
-    setError(null);
-      try {
-        const res = await employeeService.createUser(employeeDTO);
-        const { data, success, message } = res;
-        if (data && success) setEmployees((prev) => [...prev, data]);
-        else setError(message);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Unexpected error");
-      } finally {
-        setLoading(false);
-      }
-  }, []);
-
-  // Cập nhật profile user hiện tại
-  const updateProfile = useCallback(async (employeeDTO: EmployeeDTO) => {
-    setLoading(true);
-    setError(null);
-      try {
-        const res = await employeeService.updateProfile(employeeDTO);
-        const { data, success, message } = res;
-        if (data && success) setProfile(data);
-        else setError(message);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Unexpected error");
-      } finally {
-        setLoading(false);
-      }
-  }, []);
-
-  // Cập nhật user (SUPERVISOR)
-  const updateUser = useCallback(async (employeeDTO: EmployeeDTO) => {
-    setLoading(true);
-    setError(null);
-      try {
-        const res = await employeeService.updateUser(employeeDTO);
-        const { data, success, message } = res;
-        if (data && success) setProfile(data);
-        else setError(message);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Unexpected error");
-      } finally {
-        setLoading(false);
-      }
-  }, []);
-
-  // Đổi mật khẩu user hiện tại
-  const changePassword = useCallback(async (changePasswordDTO: ChangePasswordDTO) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await employeeService.changePassword(changePasswordDTO);
-      if (!res.success) setError(res.message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
+  // Mutations
+  const createUser = useMutation({
+    mutationFn: (employeeDTO: EmployeeDTO) => employeeService.createUser(employeeDTO),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
     }
-  }, []);
+  });
 
-  // Cập nhật online status user hiện tại
-  const updateOnlineStatus = useCallback(async (logDTO: StatusLogDTO) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await employeeService.updateOnlineStatus(logDTO);
-      if (!res.success) setError(res.message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
+  const updateProfile = useMutation({
+    mutationFn: (employeeDTO: EmployeeDTO) => employeeService.updateProfile(employeeDTO),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employeeProfile"] });
     }
-  }, []);
+  });
 
-  // Reset mật khẩu user (SUPERVISOR)
-  const resetPassword = useCallback(async (resetPasswordDTO: ResetPasswordDTO) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await employeeService.resetPassword(resetPasswordDTO);
-      if (!res.success) setError(res.message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
+  const updateUser = useMutation({
+    mutationFn: (employeeDTO: EmployeeDTO) => employeeService.updateUser(employeeDTO),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employeeProfile"] });
     }
-  }, []);
+  });
 
-  // Xóa user (SUPERVISOR)
-  const deleteUser = useCallback(async (employeeDTO: EmployeeDTO) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await employeeService.deleteUser(employeeDTO);
-      if (res.success) setEmployees((prev) => prev.filter(e => e.username !== employeeDTO.username));
-      else setError(res.message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
+  const changePassword = useMutation({
+    mutationFn: (changePasswordDTO: ChangePasswordDTO) => employeeService.changePassword(changePasswordDTO)
+  });
+
+  const updateOnlineStatus = useMutation({
+    mutationFn: (logDTO: StatusLogDTO) => employeeService.updateOnlineStatus(logDTO),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employeeOnlineStatus"] });
     }
-  }, []);
+  });
+
+  const resetPassword = useMutation({
+    mutationFn: (resetPasswordDTO: ResetPasswordDTO) => employeeService.resetPassword(resetPasswordDTO)
+  });
+
+  const deleteUser = useMutation({
+    mutationFn: (employeeDTO: EmployeeDTO) => employeeService.deleteUser(employeeDTO),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+    }
+  });
+
+  const updateCache = useMutation({
+    mutationFn: () => employeeService.updateCache(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employeeOnlineStatus"] });
+    }
+  });
 
   return {
-    employees,
-    profile,
-    dashboard,
-    onlineStatus,
-    loading,
-    error,
-    fetchAll,
-    fetchProfile,
-    fetchDashboard,
-    fetchOnlineStatus,
-    updateCache,
+    // Queries
+    employees: employees?.data ?? [],
+    employeesLoading: isEmployeesLoading,
+    employeesError,
+    refetchEmployees,
+    profile: profile?.data ?? null,
+    profileLoading: isProfileLoading,
+    profileError,
+    refetchProfile,
+    dashboard: dashboard?.data ?? [],
+    dashboardLoading: isDashboardLoading,
+    dashboardError,
+    refetchDashboard,
+    onlineStatus: onlineStatus?.data ?? null,
+    onlineStatusLoading: isOnlineStatusLoading,
+    onlineStatusError,
+    refetchOnlineStatus,
+
+    // Mutations
     createUser,
     updateProfile,
     updateUser,
@@ -224,5 +133,6 @@ export function useEmployee() {
     updateOnlineStatus,
     resetPassword,
     deleteUser,
+    updateCache,
   };
 }

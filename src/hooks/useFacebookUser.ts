@@ -1,169 +1,106 @@
-
 // src/hooks/useFacebookUser.ts
 // Hook for managing Facebook user state and side effects
 
-import { useState, useCallback } from "react";
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { facebookUserService } from "@/services/facebookUserService";
 import type {
-  FacebookUserListDTO,
   FacebookUserDetailDTO,
-  FacebookUserSearchCriteria,
-  PaginationResponse
+  FacebookUserSearchCriteria
 } from "@/types";
 
+
 export function useFacebookUser() {
-  const [users, setUsers] = useState<FacebookUserListDTO[]>([]);
-  const [userDetail, setUserDetail] = useState<FacebookUserDetailDTO | null>(null);
-  const [searchResult, setSearchResult] = useState<PaginationResponse<FacebookUserDetailDTO> | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  // Health check
-  const ping = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      await facebookUserService.ping();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Queries
+  const {
+    data: users,
+    isLoading: isUsersLoading,
+    error: usersError,
+    refetch: refetchUsers
+  } = useQuery({
+    queryKey: ["facebookUsers"],
+    queryFn: facebookUserService.getAll
+  });
 
-  // Get all users
-  const fetchAll = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await facebookUserService.getAll();
-      if (res.data) setUsers(res.data);
-      else setError(res.message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const {
+    data: userDetail,
+    isLoading: isUserDetailLoading,
+    error: userDetailError,
+    refetch: refetchUserDetail
+  } = useQuery({
+    queryKey: ["facebookUserDetail"],
+    // Provide a default function, must be overridden by passing enabled: false and refetching with id
+    queryFn: () => Promise.resolve({ data: null, success: true, message: "", httpCode: 200 }),
+    enabled: false
+  });
 
-  // Get user by id
-  const fetchById = useCallback(async (id: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await facebookUserService.get(id);
-      if (res.data) setUserDetail(res.data);
-      else setError(res.message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const {
+    data: searchResult,
+    isLoading: isSearchLoading,
+    error: searchError,
+    refetch: refetchSearch
+  } = useQuery({
+    queryKey: ["facebookUserSearch"],
+    // Provide a default function, must be overridden by passing enabled: false and refetching with criteria
+    queryFn: () => Promise.resolve({ data: null, success: true, message: "", httpCode: 200 }),
+    enabled: false
+  });
 
-  // Create user
-  const create = useCallback(async (user: FacebookUserDetailDTO) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await facebookUserService.create(user);
-      if (res.data) setUserDetail(res.data);
-      else setError(res.message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
+  // Mutations
+  const createUser = useMutation({
+    mutationFn: (user: FacebookUserDetailDTO) => facebookUserService.create(user),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["facebookUsers"] });
     }
-  }, []);
+  });
 
-  // Update user
-  const update = useCallback(async (user: FacebookUserDetailDTO) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await facebookUserService.update(user);
-      if (res.data) setUserDetail(res.data);
-      else setError(res.message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
+  const updateUser = useMutation({
+    mutationFn: (user: FacebookUserDetailDTO) => facebookUserService.update(user),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["facebookUsers"] });
     }
-  }, []);
+  });
 
-  // Search users
-  const search = useCallback(async (criteria: Partial<FacebookUserSearchCriteria>, page = 0, size = 10, sort = "createdAt,desc") => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await facebookUserService.search(criteria, page, size);
-      if (res.data) setSearchResult(res.data);
-      else setError(res.message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const ping = useMutation({
+    mutationFn: () => facebookUserService.ping()
+  });
 
-  // Delete user by id
-  const remove = useCallback(async (id: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      await facebookUserService.delete(id);
-      setUserDetail(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
+  const searchUsers = useMutation({
+    mutationFn: (criteria: FacebookUserSearchCriteria) => facebookUserService.search(criteria),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["facebookUserSearch"] });
     }
-  }, []);
+  });
 
-  // Export to Excel
-  const exportExcel = useCallback(async (criteria: Partial<FacebookUserSearchCriteria>) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await facebookUserService.exportExcel(criteria);
-      // handle blob download in UI
-      return res;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-      return null;
-    } finally {
-      setLoading(false);
+  const getUserById = useMutation({
+    mutationFn: (id: string) => facebookUserService.get(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["facebookUserDetail"] });
     }
-  }, []);
-
-  // Delete multiple users
-  const removeAll = useCallback(async (ids: string[]) => {
-    setLoading(true);
-    setError(null);
-    try {
-      await facebookUserService.deleteAll(ids);
-      setUserDetail(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  });
 
   return {
-    users,
-    userDetail,
-    searchResult,
-    loading,
-    error,
+    // Queries
+    users: users?.data ?? [],
+    usersLoading: isUsersLoading,
+    usersError,
+    refetchUsers,
+    userDetail: userDetail?.data ?? null,
+    userDetailLoading: isUserDetailLoading,
+    userDetailError,
+    refetchUserDetail,
+    searchResult: searchResult?.data ?? null,
+    searchLoading: isSearchLoading,
+    searchError,
+    refetchSearch,
+
+    // Mutations
+    createUser,
+    updateUser,
     ping,
-    fetchAll,
-    fetchById,
-    create,
-    update,
-    search,
-    remove,
-    exportExcel,
-    removeAll,
+    searchUsers,
+    getUserById,
   };
 }

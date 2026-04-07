@@ -1,192 +1,157 @@
-import { useState, useCallback } from "react";
+
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { performanceService } from "@/services/performanceService";
 import type {
-  PerformanceSummaryDTO,
   TicketAssessmentDetailDTO,
-  CriteriaDTO,
-  CriteriaDetailDTO,
+  CriteriaDetailDTO
 } from "@/types";
 
 export function usePerformance() {
-  const [summary, setSummary] = useState<PerformanceSummaryDTO | null>(null);
-  const [chatSummary, setChatSummary] = useState<PerformanceSummaryDTO | null>(null);
-  const [assessment, setAssessment] = useState<TicketAssessmentDetailDTO | null>(null);
-  const [criterias, setCriterias] = useState<CriteriaDTO[]>([]);
-  const [criteria, setCriteria] = useState<CriteriaDetailDTO | null>(null);
-  const [prompt, setPrompt] = useState<string>("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchReportByMonth = useCallback(async (username: string, month: number, timezone: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await performanceService.getReportByMonth(username, month, timezone);
-      if (res.success && res.data) setSummary(res.data);
-      else setError(res.message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Queries
+  const {
+    data: performanceSummary,
+    isLoading: performanceSummaryLoading,
+    error: performanceSummaryError,
+    refetch: refetchPerformanceSummary
+  } = useQuery({
+    queryKey: ["performanceSummary"],
+    // params: username, month, timezone
+    queryFn: ({ queryKey }) => {
+      const [, username, month, timezone] = queryKey as [string, string, number, string];
+      return performanceService.getReportByMonth(username, month, timezone);
+    },
+    enabled: false
+  });
 
-  const fetchChatGPTSummary = useCallback(async (username: string, month: number, timezone: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await performanceService.getChatGPTSummary(username, month, timezone);
-      if (res.success && res.data) setChatSummary(res.data);
-      else setError(res.message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const {
+    data: performanceChatSummary,
+    isLoading: performanceChatSummaryLoading,
+    error: performanceChatSummaryError,
+    refetch: refetchPerformanceChatSummary
+  } = useQuery({
+    queryKey: ["performanceChatSummary"],
+    // params: username, month, timezone
+    queryFn: ({ queryKey }) => {
+      const [, username, month, timezone] = queryKey as [string, string, number, string];
+      return performanceService.getChatGPTSummary(username, month, timezone);
+    },
+    enabled: false
+  });
 
-  const fetchTicketAssessment = useCallback(async (id: number) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await performanceService.getTicketAssessment(id);
-      if (res.success && res.data) setAssessment(res.data);
-      else setError(res.message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const {
+    data: ticketAssessment,
+    isLoading: ticketAssessmentLoading,
+    error: ticketAssessmentError,
+    refetch: refetchTicketAssessment
+  } = useQuery({
+    queryKey: ["ticketAssessment"],
+    // param: id
+    queryFn: ({ queryKey }) => {
+      const [, id] = queryKey as [string, number];
+      return performanceService.getTicketAssessment(id);
+    },
+    enabled: false
+  });
 
-  const updateTicketAssessment = useCallback(async (id: number, dto: TicketAssessmentDetailDTO) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await performanceService.updateTicketAssessment(id, dto);
-      if (res.success && res.data) setAssessment(res.data);
-      else setError(res.message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const {
+    data: criterias,
+    isLoading: criteriasLoading,
+    error: criteriasError,
+    refetch: refetchCriterias
+  } = useQuery({
+    queryKey: ["criterias"],
+    queryFn: performanceService.getCriterias
+  });
 
-  const fetchCriterias = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await performanceService.getCriterias();
-      if (res.success && res.data) setCriterias(res.data);
-      else setError(res.message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const {
+    data: criteriaDetail,
+    isLoading: criteriaDetailLoading,
+    error: criteriaDetailError,
+    refetch: refetchCriteriaDetail
+  } = useQuery({
+    queryKey: ["criteriaDetail"],
+    // param: id
+    queryFn: ({ queryKey }) => {
+      const [, id] = queryKey as [string, number];
+      return performanceService.getCriteria(id);
+    },
+    enabled: false
+  });
 
-  const fetchCriteria = useCallback(async (id: number) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await performanceService.getCriteria(id);
-      if (res.success && res.data) setCriteria(res.data);
-      else setError(res.message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
+  // Mutations
+  const updateTicketAssessment = useMutation({
+    mutationFn: ({ id, dto }: { id: number; dto: TicketAssessmentDetailDTO }) =>
+      performanceService.updateTicketAssessment(id, dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ticketAssessment"] });
     }
-  }, []);
+  });
 
-  const createCriteria = useCallback(async (dto: CriteriaDetailDTO) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await performanceService.createCriteria(dto);
-      if (res.success && res.data) setCriteria(res.data);
-      else setError(res.message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
+  const createCriteria = useMutation({
+    mutationFn: (dto: CriteriaDetailDTO) => performanceService.createCriteria(dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["criterias"] });
     }
-  }, []);
+  });
 
-  const updateCriteria = useCallback(async (dto: CriteriaDetailDTO) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await performanceService.updateCriteria(dto);
-      if (res.success && res.data) setCriteria(res.data);
-      else setError(res.message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
+  const updateCriteria = useMutation({
+    mutationFn: (dto: CriteriaDetailDTO) => performanceService.updateCriteria(dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["criterias"] });
     }
-  }, []);
+  });
 
-  const deleteCriteria = useCallback(async (id: number) => {
-    setLoading(true);
-    setError(null);
-    try {
-      await performanceService.deleteCriteria(id);
-      setCriteria(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
+  const deleteCriteria = useMutation({
+    mutationFn: (id: number) => performanceService.deleteCriteria(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["criterias"] });
     }
-  }, []);
+  });
 
-  const fetchPrompt = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await performanceService.buildPrompt();
-      if (res.success && res.data) setPrompt(res.data);
-      else setError(res.message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const buildPrompt = useMutation({
+    mutationFn: () => performanceService.buildPrompt()
+  });
 
-  const evaluateTickets = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      await performanceService.evaluateTickets();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const evaluateTickets = useMutation({
+    mutationFn: () => performanceService.evaluateTickets()
+  });
 
   return {
-    summary,
-    chatSummary,
-    assessment,
-    criterias,
-    criteria,
-    prompt,
-    loading,
-    error,
-    fetchReportByMonth,
-    fetchChatGPTSummary,
-    fetchTicketAssessment,
+    // Queries
+    performanceSummary: performanceSummary?.data ?? null,
+    performanceSummaryLoading,
+    performanceSummaryError,
+    refetchPerformanceSummary,
+
+    performanceChatSummary: performanceChatSummary?.data ?? null,
+    performanceChatSummaryLoading,
+    performanceChatSummaryError,
+    refetchPerformanceChatSummary,
+
+    ticketAssessment: ticketAssessment?.data ?? null,
+    ticketAssessmentLoading,
+    ticketAssessmentError,
+    refetchTicketAssessment,
+
+    criterias: criterias?.data ?? [],
+    criteriasLoading,
+    criteriasError,
+    refetchCriterias,
+
+    criteriaDetail: criteriaDetail?.data ?? null,
+    criteriaDetailLoading,
+    criteriaDetailError,
+    refetchCriteriaDetail,
+
+    // Mutations
     updateTicketAssessment,
-    fetchCriterias,
-    fetchCriteria,
     createCriteria,
     updateCriteria,
     deleteCriteria,
-    fetchPrompt,
-    evaluateTickets,
+    buildPrompt,
+    evaluateTickets
   };
 }

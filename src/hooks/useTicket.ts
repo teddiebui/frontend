@@ -1,218 +1,86 @@
 // src/hooks/useTicket.ts
 // Hook quản lý state và side effect cho ticket, UI chỉ gọi hook này
 
-import { useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ticketService } from "@/services/ticketService";
 import type {
   TicketDetailDTO,
-  TicketListDTO,
-  TicketDashboardDTO,
-  TicketReportDTO,
   TicketSearchCriteria,
   NoteDTO,
 } from "@/types";
 
-export function useTicket() {
-  const [tickets, setTickets] = useState<TicketListDTO[]>([]);
-  const [ticketDetail, setTicketDetail] = useState<TicketDetailDTO | null>(null);
-  const [dashboard, setDashboard] = useState<TicketDashboardDTO[]>([]);
-  const [notes, setNotes] = useState<NoteDTO[]>([]);
-  const [reports, setReports] = useState<TicketReportDTO[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export function useTicket(ticketId?: number) {
+  const queryClient = useQueryClient();
 
-  // Lấy ticket theo id
-  const fetchById = useCallback(async (id: number) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await ticketService.getById(id);
-      const { data, success, message } = res;
-      if (data && success) setTicketDetail(data);
-      else setError(message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Queries
+  const ticketDetailQuery = useQuery({
+    queryKey: ["ticketDetail", ticketId],
+    queryFn: () =>
+      ticketId
+        ? ticketService.getById(ticketId)
+        : Promise.resolve({ data: null, success: true, message: "", httpCode: 200 }),
+    enabled: !!ticketId,
+  });
 
-  // Tạo ticket mới
-  const create = useCallback(async (dto: TicketDetailDTO) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await ticketService.create(dto);
-      const { data, success, message } = res;
-      if (data && success) setTicketDetail(data);
-      else setError(message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const dashboardQuery = useQuery({
+    queryKey: ["ticketDashboard"],
+    queryFn: ticketService.dashboard,
+  });
 
-  // Cập nhật ticket
-  const update = useCallback(async (id: number, dto: TicketDetailDTO) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await ticketService.update(id, dto);
-      const { data, success, message } = res;
-      if (data && success) setTicketDetail(data);
-      else setError(message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Mutations
+  const createTicket = useMutation({
+    mutationFn: (dto: TicketDetailDTO) => ticketService.create(dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ticketDashboard"] });
+    },
+  });
 
-  // Lấy ticket theo Facebook user id
-  const fetchByFacebookId = useCallback(async (id: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await ticketService.getByFacebookId(id);
-      const { data, success, message } = res;
-      if (data && success) setTickets(data);
-      else setError(message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const updateTicket = useMutation({
+    mutationFn: ({ id, dto }: { id: number; dto: TicketDetailDTO }) => ticketService.update(id, dto),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["ticketDetail", variables.id] });
+    },
+  });
 
-  // Lấy tất cả note của ticket
-  const fetchAllNotes = useCallback(async (ticketId: number) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await ticketService.getAllNotes(ticketId);
-      const { data, success, message } = res;
-      if (data && success) setNotes(Array.from(data));
-      else setError(message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const addNote = useMutation({
+    mutationFn: ({ ticketId, noteDto }: { ticketId: number; noteDto: NoteDTO }) => ticketService.addNote(ticketId, noteDto),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["ticketDetail", variables.ticketId] });
+    },
+  });
 
-  // Thêm note vào ticket
-  const addNote = useCallback(async (ticketId: number, noteDto: NoteDTO) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await ticketService.addNote(ticketId, noteDto);
-      if (!res.success) setError(res.message);
-      else await fetchAllNotes(ticketId);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
-    }
-  }, [fetchAllNotes]);
+  const removeNote = useMutation({
+    mutationFn: ({ ticketId, noteId }: { ticketId: number; noteId: number }) => ticketService.removeNote(ticketId, noteId),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["ticketDetail", variables.ticketId] });
+    },
+  });
 
-  // Xóa note khỏi ticket
-  const removeNote = useCallback(async (ticketId: number, noteId: number) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await ticketService.removeNote(ticketId, noteId);
-      if (!res.success) setError(res.message);
-      else await fetchAllNotes(ticketId);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
-    }
-  }, [fetchAllNotes]);
+  // Search tickets (paginated)
+  const searchTickets = useMutation({
+    mutationFn: (params: { criteria: TicketSearchCriteria; page?: number; size?: number }) =>
+      ticketService.search(params.criteria, params.page, params.size),
+  });
 
-  // Tìm kiếm ticket (có phân trang)
-  const search = useCallback(async (criteria: TicketSearchCriteria, page = 0, size = 10) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await ticketService.search(criteria, page, size);
-      const { data, success, message } = res;
-      if (data && success) setTickets(data.content);
-      else setError(message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Tìm kiếm ticket (không phân trang, cho báo cáo)
-  const searchReport = useCallback(async (criteria: TicketSearchCriteria) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await ticketService.searchReport(criteria);
-      const { data, success, message } = res;
-      if (data && success) setTickets(data.content);
-      else setError(message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Lấy dashboard ticket cho user hiện tại
-  const fetchDashboard = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await ticketService.dashboard();
-      const { data, success, message } = res;
-      if (data && success) setDashboard(data);
-      else setError(message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Lấy các ticket đã resolved có message (cho đánh giá)
-  const findResolvedWithMessages = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await ticketService.findResolvedWithMessages();
-      const { data, success, message } = res;
-      if (data && success) setReports(data);
-      else setError(message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Search tickets for report (not paginated)
+  const searchReport = useMutation({
+    mutationFn: (criteria: TicketSearchCriteria) => ticketService.searchReport(criteria),
+  });
 
   return {
-    tickets,
-    ticketDetail,
-    dashboard,
-    notes,
-    reports,
-    loading,
-    error,
-    fetchById,
-    create,
-    update,
-    fetchByFacebookId,
+    ticketDetail: ticketDetailQuery.data && 'data' in ticketDetailQuery.data ? ticketDetailQuery.data.data : null,
+    ticketDetailLoading: ticketDetailQuery.isLoading,
+    ticketDetailError: ticketDetailQuery.error,
+    refetchTicketDetail: ticketDetailQuery.refetch,
+    dashboard: dashboardQuery.data && 'data' in dashboardQuery.data ? dashboardQuery.data.data : [],
+    dashboardLoading: dashboardQuery.isLoading,
+    dashboardError: dashboardQuery.error,
+    refetchDashboard: dashboardQuery.refetch,
+    createTicket,
+    updateTicket,
     addNote,
     removeNote,
-    fetchAllNotes,
-    search,
+    searchTickets,
     searchReport,
-    fetchDashboard,
-    findResolvedWithMessages,
   };
 }

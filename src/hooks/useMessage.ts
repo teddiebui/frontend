@@ -1,52 +1,42 @@
 // Hook for messageService: manage state and side effects for messages
-import { useState, useCallback } from "react";
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { messageService } from "@/services/messageService";
 import type { MessageDTO } from "@/types";
 
-export function useMessage() {
-  const [messages, setMessages] = useState<MessageDTO[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [sentMessage, setSentMessage] = useState<MessageDTO | null>(null);
+export function useMessage(ticketId?: number) {
+  const queryClient = useQueryClient();
 
-  // Fetch messages by ticketId
-  const fetchMessagesByTicket = useCallback(async (ticketId: number) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await messageService.getMessagesByTicket(ticketId);
-      const { data, success, message } = res;
-      if (data && success) setMessages(data);
-      else setError(message);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Query: fetch messages by ticketId
+  const {
+    data: messages,
+    isLoading: messagesLoading,
+    error: messagesError,
+    refetch: refetchMessages
+  } = useQuery({
+    queryKey: ["messages", ticketId],
+    queryFn: () =>
+      ticketId !== undefined
+        ? messageService.getMessagesByTicket(ticketId)
+        : Promise.resolve({ data: [], success: true, message: "", httpCode: 200 }),
+    enabled: ticketId !== undefined,
+  });
 
-  // Send a message
-  const sendMessage = useCallback(async (message: MessageDTO) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await messageService.addMessage(message);
-      const { data, success, message: msg } = res;
-      if (data && success) setSentMessage(data);
-      else setError(msg);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Mutation: send a message
+  const sendMessage = useMutation({
+    mutationFn: (message: MessageDTO) => messageService.addMessage(message),
+    onSuccess: () => {
+      if (ticketId !== undefined) {
+        queryClient.invalidateQueries({ queryKey: ["messages", ticketId] });
+      }
+    },
+  });
 
   return {
-    messages,
-    sentMessage,
-    loading,
-    error,
-    fetchMessagesByTicket,
+    messages: messages?.data ?? [],
+    messagesLoading,
+    messagesError,
+    refetchMessages,
     sendMessage,
   };
 }
