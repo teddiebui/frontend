@@ -143,7 +143,7 @@ function Login() {
       {/* CSS nội bộ cho login page */}
       <style>{`
         .login-body {
-          background: url("/src/assets/img/img-auth-bg.jpg") no-repeat center fixed;
+          background: url("/img/img-auth-bg.jpg") no-repeat center fixed;
           background-size: cover;
           width: 100%;
           height: 100vh;
