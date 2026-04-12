@@ -5,98 +5,141 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { facebookUserService } from "@/services/facebookUserService";
 import type {
+  EmployeeDashboardDTO,
   FacebookUserDetailDTO,
-  FacebookUserSearchCriteria
+  FacebookUserListDTO,
+  FacebookUserSearchCriteria,
+  PaginationResponse,
 } from "@/types";
+import { employeeService } from "@/services/employeeService";
 
 
 export function useFacebookUser() {
   const queryClient = useQueryClient();
 
-  // Queries
-  const {
-    data: users,
-    isLoading: isUsersLoading,
-    error: usersError,
-    refetch: refetchUsers
-  } = useQuery({
-    queryKey: ["facebookUsers"],
-    queryFn: facebookUserService.getAll
-  });
+  // load assignees for select component
+  const loadAssigneesQuery = useQuery<EmployeeDashboardDTO[], Error>({
+    queryKey: ["assignees"],
+    queryFn: async () => {
+      const response = await employeeService.dashboard();
 
-  const {
-    data: userDetail,
-    isLoading: isUserDetailLoading,
-    error: userDetailError,
-    refetch: refetchUserDetail
-  } = useQuery({
-    queryKey: ["facebookUserDetail"],
-    // Provide a default function, must be overridden by passing enabled: false and refetching with id
-    queryFn: () => Promise.resolve({ data: null, success: true, message: "", httpCode: 200 }),
+      if (!response.success) {
+        throw new Error(response.message || "Failed to load assignees");
+      }
+
+      return response.data ?? [];
+    },
     enabled: false
   });
 
-  const {
-    data: searchResult,
-    isLoading: isSearchLoading,
-    error: searchError,
-    refetch: refetchSearch
-  } = useQuery({
+  // Queries
+  const usersQuery = useQuery<FacebookUserListDTO[], Error>({
+    queryKey: ["facebookUsers"],
+    queryFn: async () => {
+      const response = await facebookUserService.getAll();
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to fetch Facebook users");
+      }
+
+      return response.data ?? [];
+    }
+  });
+
+  const userDetailQuery = useQuery<FacebookUserDetailDTO | null, Error>({
+    queryKey: ["facebookUserDetail"],
+    queryFn: async () => null,
+    enabled: false
+  });
+
+  const searchResultQuery = useQuery<PaginationResponse<FacebookUserDetailDTO> | null, Error>({
     queryKey: ["facebookUserSearch"],
-    // Provide a default function, must be overridden by passing enabled: false and refetching with criteria
-    queryFn: () => Promise.resolve({ data: null, success: true, message: "", httpCode: 200 }),
+    queryFn: async () => null,
     enabled: false
   });
 
   // Mutations
-  const createUser = useMutation({
-    mutationFn: (user: FacebookUserDetailDTO) => facebookUserService.create(user),
+  const createUser = useMutation<FacebookUserDetailDTO | null, Error, FacebookUserDetailDTO>({
+    mutationFn: async (user) => {
+      const response = await facebookUserService.create(user);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to create Facebook user");
+      }
+
+      return response.data ?? null;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["facebookUsers"] });
     }
   });
 
-  const updateUser = useMutation({
-    mutationFn: (user: FacebookUserDetailDTO) => facebookUserService.update(user),
+  const updateUser = useMutation<FacebookUserDetailDTO | null, Error, FacebookUserDetailDTO>({
+    mutationFn: async (user) => {
+      const response = await facebookUserService.update(user);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to update Facebook user");
+      }
+
+      return response.data ?? null;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["facebookUsers"] });
     }
   });
 
-  const ping = useMutation({
-    mutationFn: () => facebookUserService.ping()
+  const ping = useMutation<string | null, Error, void>({
+    mutationFn: async () => {
+      const response = await facebookUserService.ping();
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to ping Facebook user service");
+      }
+
+      return response.data ?? null;
+    }
   });
 
-  const searchUsers = useMutation({
-    mutationFn: (criteria: FacebookUserSearchCriteria) => facebookUserService.search(criteria),
+  const searchUsers = useMutation<
+    PaginationResponse<FacebookUserDetailDTO> | null,
+    Error,
+    FacebookUserSearchCriteria
+  >({
+    mutationFn: async (criteria) => {
+      const response = await facebookUserService.search(criteria);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to search Facebook users");
+      }
+
+      return response.data ?? null;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["facebookUserSearch"] });
     }
   });
 
-  const getUserById = useMutation({
-    mutationFn: (id: string) => facebookUserService.get(id),
+  const getUserById = useMutation<FacebookUserDetailDTO | null, Error, string>({
+    mutationFn: async (id) => {
+      const response = await facebookUserService.get(id);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to fetch Facebook user detail");
+      }
+
+      return response.data ?? null;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["facebookUserDetail"] });
     }
   });
 
   return {
-    // Queries
-    users: users?.data ?? [],
-    usersLoading: isUsersLoading,
-    usersError,
-    refetchUsers,
-    userDetail: userDetail?.data ?? null,
-    userDetailLoading: isUserDetailLoading,
-    userDetailError,
-    refetchUserDetail,
-    searchResult: searchResult?.data ?? null,
-    searchLoading: isSearchLoading,
-    searchError,
-    refetchSearch,
-
-    // Mutations
+    loadAssigneesQuery,
+    usersQuery,
+    userDetailQuery,
+    searchResultQuery,
     createUser,
     updateUser,
     ping,

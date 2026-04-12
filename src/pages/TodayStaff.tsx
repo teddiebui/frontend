@@ -15,18 +15,20 @@ function formatTime(from: string): string {
 }
 
 export default function TodayStaff() {
-    const { dashboard, loading, error, fetchDashboard } = useEmployee();
+    const {
+        employeeDashboard: { data, isLoading, error, refetch },
+    } = useEmployee();
 
     useEffect(() => {
-        fetchDashboard();
-    }, [fetchDashboard]);
+        refetch();
+    }, [refetch]);
 
     // Toast khi fetch thành công
     useEffect(() => {
-        if (dashboard) {
+        if (!isLoading && !error) {
             toast.success('Dashboard tải thành công!');
         }
-    }, [dashboard]);
+    }, [isLoading, error]);
 
     // Toast khi fetch thất bại
     useEffect(() => {
@@ -46,15 +48,15 @@ export default function TodayStaff() {
                             Danh Sách Nhân Viên
                         </CardTitle>
                         <Badge className="badge bg-primary employee-count">
-                            {dashboard ? dashboard.length : 0}
+                            {data ? data.length : 0}
                         </Badge>
                     </CardHeader>
                     <CardContent>
-                        {loading ? (
+                        {isLoading ? (
                             <Skeleton className="h-48 w-full" />
                         ) : error ? (
                             <Alert variant="destructive">
-                                <AlertDescription>{error}</AlertDescription>
+                                <AlertDescription>{error.message}</AlertDescription>
                             </Alert>
                         ) : (
                             <Table id="employeeTable" className="table table-hover">
@@ -68,8 +70,8 @@ export default function TodayStaff() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody id="employeeList2" className="position-relative">
-                                    {dashboard && dashboard.length > 0 ? (
-                                        dashboard.map((emp) => (
+                                    {data && data.length > 0 ? (
+                                        data.map((emp) => (
                                             <TableRow className="show" key={emp.username}>
                                                 <TableCell>{emp.name}</TableCell>
                                                 <TableCell>{emp.userGroup?.code || ''}</TableCell>

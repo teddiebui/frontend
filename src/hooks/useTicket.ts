@@ -1,10 +1,17 @@
 // src/hooks/useTicket.ts
 // Hook quản lý state và side effect cho ticket, UI chỉ gọi hook này
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { ticketService } from "@/services/ticketService";
 import type {
+  PaginationResponse,
   TicketDetailDTO,
+  TicketDashboardDTO,
+  TicketListDTO,
   TicketSearchCriteria,
   NoteDTO,
 } from "@/types";
@@ -13,69 +20,140 @@ export function useTicket(ticketId?: number) {
   const queryClient = useQueryClient();
 
   // Queries
-  const ticketDetailQuery = useQuery({
+  const ticketDetailQuery = useQuery<TicketDetailDTO | null, Error>({
     queryKey: ["ticketDetail", ticketId],
-    queryFn: () =>
-      ticketId
-        ? ticketService.getById(ticketId)
-        : Promise.resolve({ data: null, success: true, message: "", httpCode: 200 }),
+    queryFn: async () => {
+      if (!ticketId) {
+        return null;
+      }
+
+      const response = await ticketService.getById(ticketId);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to fetch ticket detail");
+      }
+
+      return response.data ?? null;
+    },
     enabled: !!ticketId,
   });
 
-  const dashboardQuery = useQuery({
+  const dashboardQuery = useQuery<TicketDashboardDTO[], Error>({
     queryKey: ["ticketDashboard"],
-    queryFn: ticketService.dashboard,
+    queryFn: async () => {
+      const response = await ticketService.dashboard();
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to fetch ticket dashboard");
+      }
+
+      return response.data ?? [];
+    },
   });
 
   // Mutations
-  const createTicket = useMutation({
-    mutationFn: (dto: TicketDetailDTO) => ticketService.create(dto),
+  const createTicket = useMutation<TicketDetailDTO | null, Error, TicketDetailDTO>({
+    mutationFn: async (dto) => {
+      const response = await ticketService.create(dto);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to create ticket");
+      }
+
+      return response.data ?? null;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ticketDashboard"] });
     },
   });
 
-  const updateTicket = useMutation({
-    mutationFn: ({ id, dto }: { id: number; dto: TicketDetailDTO }) => ticketService.update(id, dto),
+  const updateTicket = useMutation<
+    TicketDetailDTO | null,
+    Error,
+    { id: number; dto: TicketDetailDTO }
+  >({
+    mutationFn: async ({ id, dto }) => {
+      const response = await ticketService.update(id, dto);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to update ticket");
+      }
+
+      return response.data ?? null;
+    },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["ticketDetail", variables.id] });
+      queryClient.invalidateQueries({ queryKey: ["ticketDashboard"] });
     },
   });
 
-  const addNote = useMutation({
-    mutationFn: ({ ticketId, noteDto }: { ticketId: number; noteDto: NoteDTO }) => ticketService.addNote(ticketId, noteDto),
+  const addNote = useMutation<void, Error, { ticketId: number; noteDto: NoteDTO }>({
+    mutationFn: async ({ ticketId, noteDto }) => {
+      const response = await ticketService.addNote(ticketId, noteDto);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to add note");
+      }
+
+      return response.data ?? undefined;
+    },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["ticketDetail", variables.ticketId] });
     },
   });
 
-  const removeNote = useMutation({
-    mutationFn: ({ ticketId, noteId }: { ticketId: number; noteId: number }) => ticketService.removeNote(ticketId, noteId),
+  const removeNote = useMutation<void, Error, { ticketId: number; noteId: number }>({
+    mutationFn: async ({ ticketId, noteId }) => {
+      const response = await ticketService.removeNote(ticketId, noteId);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to remove note");
+      }
+
+      return response.data ?? undefined;
+    },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["ticketDetail", variables.ticketId] });
     },
   });
 
   // Search tickets (paginated)
-  const searchTickets = useMutation({
-    mutationFn: (params: { criteria: TicketSearchCriteria; page?: number; size?: number }) =>
-      ticketService.search(params.criteria, params.page, params.size),
+  const searchTickets = useMutation<
+    PaginationResponse<TicketListDTO> | null,
+    Error,
+    { criteria: TicketSearchCriteria; page?: number; size?: number }
+  >({
+    mutationFn: async ({ criteria, page, size }) => {
+      const response = await ticketService.search(criteria, page, size);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to search tickets");
+      }
+
+      return response.data ?? null;
+    },
   });
 
   // Search tickets for report (not paginated)
-  const searchReport = useMutation({
-    mutationFn: (criteria: TicketSearchCriteria) => ticketService.searchReport(criteria),
+  const searchReport = useMutation<
+    PaginationResponse<TicketListDTO> | null,
+    Error,
+    TicketSearchCriteria
+  >({
+    mutationFn: async (criteria) => {
+      const response = await ticketService.searchReport(criteria);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to search ticket report");
+      }
+
+      return response.data ?? null;
+    },
   });
 
   return {
-    ticketDetail: ticketDetailQuery.data && 'data' in ticketDetailQuery.data ? ticketDetailQuery.data.data : null,
-    ticketDetailLoading: ticketDetailQuery.isLoading,
-    ticketDetailError: ticketDetailQuery.error,
-    refetchTicketDetail: ticketDetailQuery.refetch,
-    dashboard: dashboardQuery.data && 'data' in dashboardQuery.data ? dashboardQuery.data.data : [],
-    dashboardLoading: dashboardQuery.isLoading,
-    dashboardError: dashboardQuery.error,
-    refetchDashboard: dashboardQuery.refetch,
+    ticketDetailQuery,
+    dashboardQuery,
     createTicket,
     updateTicket,
     addNote,

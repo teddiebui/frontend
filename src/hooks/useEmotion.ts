@@ -3,24 +3,20 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { emotionService } from "@/services/emotionService";
+import type { EmotionDTO } from "@/types";
 // import type { EmotionDTO } from "@/types";
 
 export function useEmotion() {
   // Queries
-  const {
-    data: emotions,
-    isLoading: isEmotionsLoading,
-    error: emotionsError,
-    refetch: refetchEmotions
-  } = useQuery({
+  return useQuery<EmotionDTO[], Error>({
     queryKey: ["emotions"],
-    queryFn: emotionService.getAll
+    queryFn: async () => {
+      const response = await emotionService.getAll();
+      if (!response.success) {
+        throw new Error(response.message || "Failed to fetch emotions");
+      }
+      return response.data || [];
+    },
+    enabled: false
   });
-
-  return {
-    emotions: emotions?.data ?? [],
-    emotionsLoading: isEmotionsLoading,
-    emotionsError,
-    refetchEmotions,
-  };
 }

@@ -3,150 +3,192 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { performanceService } from "@/services/performanceService";
 import type {
+  CriteriaDTO,
   TicketAssessmentDetailDTO,
-  CriteriaDetailDTO
+  CriteriaDetailDTO,
+  PerformanceSummaryDTO,
 } from "@/types";
 
 export function usePerformance() {
   const queryClient = useQueryClient();
 
   // Queries
-  const {
-    data: performanceSummary,
-    isLoading: performanceSummaryLoading,
-    error: performanceSummaryError,
-    refetch: refetchPerformanceSummary
-  } = useQuery({
+  const performanceSummaryQuery = useQuery<PerformanceSummaryDTO | null, Error>({
     queryKey: ["performanceSummary"],
     // params: username, month, timezone
-    queryFn: ({ queryKey }) => {
+    queryFn: async ({ queryKey }) => {
       const [, username, month, timezone] = queryKey as [string, string, number, string];
-      return performanceService.getReportByMonth(username, month, timezone);
+
+      const response = await performanceService.getReportByMonth(username, month, timezone);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to fetch performance summary");
+      }
+
+      return response.data ?? null;
     },
     enabled: false
   });
 
-  const {
-    data: performanceChatSummary,
-    isLoading: performanceChatSummaryLoading,
-    error: performanceChatSummaryError,
-    refetch: refetchPerformanceChatSummary
-  } = useQuery({
+  const performanceChatSummaryQuery = useQuery<PerformanceSummaryDTO | null, Error>({
     queryKey: ["performanceChatSummary"],
     // params: username, month, timezone
-    queryFn: ({ queryKey }) => {
+    queryFn: async ({ queryKey }) => {
       const [, username, month, timezone] = queryKey as [string, string, number, string];
-      return performanceService.getChatGPTSummary(username, month, timezone);
+
+      const response = await performanceService.getChatGPTSummary(username, month, timezone);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to fetch performance chat summary");
+      }
+
+      return response.data ?? null;
     },
     enabled: false
   });
 
-  const {
-    data: ticketAssessment,
-    isLoading: ticketAssessmentLoading,
-    error: ticketAssessmentError,
-    refetch: refetchTicketAssessment
-  } = useQuery({
+  const ticketAssessmentQuery = useQuery<TicketAssessmentDetailDTO | null, Error>({
     queryKey: ["ticketAssessment"],
     // param: id
-    queryFn: ({ queryKey }) => {
+    queryFn: async ({ queryKey }) => {
       const [, id] = queryKey as [string, number];
-      return performanceService.getTicketAssessment(id);
+
+      const response = await performanceService.getTicketAssessment(id);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to fetch ticket assessment");
+      }
+
+      return response.data ?? null;
     },
     enabled: false
   });
 
-  const {
-    data: criterias,
-    isLoading: criteriasLoading,
-    error: criteriasError,
-    refetch: refetchCriterias
-  } = useQuery({
+  const criteriasQuery = useQuery<CriteriaDTO[], Error>({
     queryKey: ["criterias"],
-    queryFn: performanceService.getCriterias
+    queryFn: async () => {
+      const response = await performanceService.getCriterias();
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to fetch criterias");
+      }
+
+      return response.data ?? [];
+    }
   });
 
-  const {
-    data: criteriaDetail,
-    isLoading: criteriaDetailLoading,
-    error: criteriaDetailError,
-    refetch: refetchCriteriaDetail
-  } = useQuery({
+  const criteriaDetailQuery = useQuery<CriteriaDetailDTO | null, Error>({
     queryKey: ["criteriaDetail"],
     // param: id
-    queryFn: ({ queryKey }) => {
+    queryFn: async ({ queryKey }) => {
       const [, id] = queryKey as [string, number];
-      return performanceService.getCriteria(id);
+
+      const response = await performanceService.getCriteria(id);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to fetch criteria detail");
+      }
+
+      return response.data ?? null;
     },
     enabled: false
   });
 
   // Mutations
-  const updateTicketAssessment = useMutation({
-    mutationFn: ({ id, dto }: { id: number; dto: TicketAssessmentDetailDTO }) =>
-      performanceService.updateTicketAssessment(id, dto),
+  const updateTicketAssessment = useMutation<
+    TicketAssessmentDetailDTO | null,
+    Error,
+    { id: number; dto: TicketAssessmentDetailDTO }
+  >({
+    mutationFn: async ({ id, dto }) => {
+      const response = await performanceService.updateTicketAssessment(id, dto);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to update ticket assessment");
+      }
+
+      return response.data ?? null;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ticketAssessment"] });
     }
   });
 
-  const createCriteria = useMutation({
-    mutationFn: (dto: CriteriaDetailDTO) => performanceService.createCriteria(dto),
+  const createCriteria = useMutation<CriteriaDetailDTO | null, Error, CriteriaDetailDTO>({
+    mutationFn: async (dto) => {
+      const response = await performanceService.createCriteria(dto);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to create criteria");
+      }
+
+      return response.data ?? null;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["criterias"] });
     }
   });
 
-  const updateCriteria = useMutation({
-    mutationFn: (dto: CriteriaDetailDTO) => performanceService.updateCriteria(dto),
+  const updateCriteria = useMutation<CriteriaDetailDTO | null, Error, CriteriaDetailDTO>({
+    mutationFn: async (dto) => {
+      const response = await performanceService.updateCriteria(dto);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to update criteria");
+      }
+
+      return response.data ?? null;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["criterias"] });
     }
   });
 
-  const deleteCriteria = useMutation({
-    mutationFn: (id: number) => performanceService.deleteCriteria(id),
+  const deleteCriteria = useMutation<void, Error, number>({
+    mutationFn: async (id) => {
+      const response = await performanceService.deleteCriteria(id);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to delete criteria");
+      }
+
+      return response.data ?? undefined;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["criterias"] });
     }
   });
 
-  const buildPrompt = useMutation({
-    mutationFn: () => performanceService.buildPrompt()
+  const buildPrompt = useMutation<string | null, Error, void>({
+    mutationFn: async () => {
+      const response = await performanceService.buildPrompt();
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to build prompt");
+      }
+
+      return response.data ?? null;
+    }
   });
 
-  const evaluateTickets = useMutation({
-    mutationFn: () => performanceService.evaluateTickets()
+  const evaluateTickets = useMutation<void, Error, void>({
+    mutationFn: async () => {
+      const response = await performanceService.evaluateTickets();
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to evaluate tickets");
+      }
+
+      return response.data ?? undefined;
+    }
   });
 
   return {
-    // Queries
-    performanceSummary: performanceSummary?.data ?? null,
-    performanceSummaryLoading,
-    performanceSummaryError,
-    refetchPerformanceSummary,
-
-    performanceChatSummary: performanceChatSummary?.data ?? null,
-    performanceChatSummaryLoading,
-    performanceChatSummaryError,
-    refetchPerformanceChatSummary,
-
-    ticketAssessment: ticketAssessment?.data ?? null,
-    ticketAssessmentLoading,
-    ticketAssessmentError,
-    refetchTicketAssessment,
-
-    criterias: criterias?.data ?? [],
-    criteriasLoading,
-    criteriasError,
-    refetchCriterias,
-
-    criteriaDetail: criteriaDetail?.data ?? null,
-    criteriaDetailLoading,
-    criteriaDetailError,
-    refetchCriteriaDetail,
-
-    // Mutations
+    performanceSummaryQuery,
+    performanceChatSummaryQuery,
+    ticketAssessmentQuery,
+    criteriasQuery,
+    criteriaDetailQuery,
     updateTicketAssessment,
     createCriteria,
     updateCriteria,

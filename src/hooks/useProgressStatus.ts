@@ -3,23 +3,18 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { progressStatusService } from "@/services/progressStatusService";
-import type { ProgressStatusDTO, APIResultSet } from "@/types";
+import type { ProgressStatusDTO } from "@/types";
 
 export function useProgressStatus() {
-  const {
-    data,
-    isLoading,
-    error,
-    refetch
-  } = useQuery<APIResultSet<ProgressStatusDTO[]>, Error>({
+  return useQuery<ProgressStatusDTO[], Error>({
     queryKey: ["progressStatuses"],
-    queryFn: progressStatusService.getAll
+    queryFn: async () => {
+      const response = await progressStatusService.getAll();
+      if (!response.success) {
+        throw new Error(response.message || "Failed to fetch progress statuses");
+      }
+      return response.data || [];
+    },
+    enabled: false
   });
-
-  return {
-    progressStatuses: data?.data ?? [],
-    loading: isLoading,
-    error,
-    refetch,
-  };
 }

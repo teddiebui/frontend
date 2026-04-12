@@ -3,23 +3,19 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { satisfactionService } from "@/services/satisfactionService";
-import type { SatisfactionDTO, APIResultSet } from "@/types";
+import type { SatisfactionDTO } from "@/types";
 
 export function useSatisfaction() {
-  const {
-    data,
-    isLoading,
-    error,
-    refetch
-  } = useQuery<APIResultSet<SatisfactionDTO[]>, Error>({
-    queryKey: ["satisfactions"],
-    queryFn: satisfactionService.getAll
-  });
 
-  return {
-    satisfactions: data?.data ?? [],
-    loading: isLoading,
-    error,
-    refetch,
-  };
+  return useQuery<SatisfactionDTO[], Error>({
+    queryKey: ["satisfactions"],
+    queryFn: async () => {
+      const response = await satisfactionService.getAll();
+      if (!response.success) {
+        throw new Error(response.message || "Failed to fetch satisfactions");
+      }
+      return response.data || [];
+    },
+    enabled: false, 
+  });
 }

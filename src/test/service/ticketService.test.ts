@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ticketService } from '@/services/ticketService';
 import { httpClient } from '@/lib/http/httpClient';
 import type {
+  APIResultSet,
   TicketDetailDTO,
   TicketListDTO,
   TicketDashboardDTO,
@@ -9,7 +10,6 @@ import type {
   TicketSearchCriteria,
   NoteDTO,
   PaginationResponse,
-  APIResultSet,
 } from '@/types';
 
 vi.mock('@/lib/http/httpClient', () => ({
@@ -22,6 +22,11 @@ vi.mock('@/lib/http/httpClient', () => ({
 }));
 
 describe('ticketService', () => {
+  const mockedGet = vi.mocked(httpClient.get);
+  const mockedPost = vi.mocked(httpClient.post);
+  const mockedPut = vi.mocked(httpClient.put);
+  const mockedDelete = vi.mocked(httpClient.delete);
+
   const dummyTicket: TicketDetailDTO = {
     id: 1,
     title: 'Test Ticket',
@@ -111,139 +116,152 @@ describe('ticketService', () => {
     satisfaction: 0,
   };
 
+  function apiResult<T>(
+    data: T | null,
+    overrides: Partial<APIResultSet<T>> = {},
+  ): APIResultSet<T> {
+    return {
+      httpCode: 200,
+      message: '',
+      data,
+      success: true,
+      ...overrides,
+    };
+  }
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('getById happy path', async () => {
-    (httpClient.get as any).mockResolvedValue({ data: dummyTicket, success: true });
+    mockedGet.mockResolvedValue(apiResult(dummyTicket));
     const res = await ticketService.getById(1);
     expect(res.data).toEqual(dummyTicket);
   });
 
   it('getById failed path', async () => {
-    (httpClient.get as any).mockResolvedValue({ data: null, success: false, message: 'Not found' });
+    mockedGet.mockResolvedValue(apiResult(null, { success: false, message: 'Not found', httpCode: 404 }));
     const res = await ticketService.getById(1);
     expect(res.success).toBe(false);
     expect(res.data).toBeNull();
   });
 
   it('create happy path', async () => {
-    (httpClient.post as any).mockResolvedValue({ data: dummyTicket, success: true });
+    mockedPost.mockResolvedValue(apiResult(dummyTicket));
     const res = await ticketService.create(dummyTicket);
     expect(res.data).toEqual(dummyTicket);
   });
 
   it('create failed path', async () => {
-    (httpClient.post as any).mockResolvedValue({ data: null, success: false, message: 'Error' });
+    mockedPost.mockResolvedValue(apiResult(null, { success: false, message: 'Error', httpCode: 400 }));
     const res = await ticketService.create(dummyTicket);
     expect(res.success).toBe(false);
   });
 
   it('update happy path', async () => {
-    (httpClient.put as any).mockResolvedValue({ data: dummyTicket, success: true });
+    mockedPut.mockResolvedValue(apiResult(dummyTicket));
     const res = await ticketService.update(1, dummyTicket);
     expect(res.data).toEqual(dummyTicket);
   });
 
   it('update failed path', async () => {
-    (httpClient.put as any).mockResolvedValue({ data: null, success: false, message: 'Update failed' });
+    mockedPut.mockResolvedValue(apiResult(null, { success: false, message: 'Update failed', httpCode: 400 }));
     const res = await ticketService.update(1, dummyTicket);
     expect(res.success).toBe(false);
   });
 
   it('getByFacebookId happy path', async () => {
-    (httpClient.get as any).mockResolvedValue({ data: dummyList, success: true });
+    mockedGet.mockResolvedValue(apiResult(dummyList));
     const res = await ticketService.getByFacebookId('fb1');
     expect(res.data).toEqual(dummyList);
   });
 
   it('getByFacebookId failed path', async () => {
-    (httpClient.get as any).mockResolvedValue({ data: null, success: false });
+    mockedGet.mockResolvedValue(apiResult(null, { success: false, httpCode: 404 }));
     const res = await ticketService.getByFacebookId('fb1');
     expect(res.data).toBeNull();
   });
 
   it('addNote happy path', async () => {
-    (httpClient.put as any).mockResolvedValue({ success: true });
+    mockedPut.mockResolvedValue(apiResult(null));
     const res = await ticketService.addNote(1, { id: 1, text: 'Note', ticketId: 1, timestamp: '2024-01-01T00:00:00Z' });
     expect(res.success).toBe(true);
   });
 
   it('addNote failed path', async () => {
-    (httpClient.put as any).mockResolvedValue({ success: false, message: 'Add note failed' });
+    mockedPut.mockResolvedValue(apiResult(null, { success: false, message: 'Add note failed', httpCode: 400 }));
     const res = await ticketService.addNote(1, { id: 1, text: 'Note', ticketId: 1, timestamp: '2024-01-01T00:00:00Z' });
     expect(res.success).toBe(false);
   });
 
   it('removeNote happy path', async () => {
-    (httpClient.delete as any).mockResolvedValue({ success: true });
+    mockedDelete.mockResolvedValue(apiResult(null));
     const res = await ticketService.removeNote(1, 1);
     expect(res.success).toBe(true);
   });
 
   it('removeNote failed path', async () => {
-    (httpClient.delete as any).mockResolvedValue({ success: false, message: 'Remove note failed' });
+    mockedDelete.mockResolvedValue(apiResult(null, { success: false, message: 'Remove note failed', httpCode: 400 }));
     const res = await ticketService.removeNote(1, 1);
     expect(res.success).toBe(false);
   });
 
   it('getAllNotes happy path', async () => {
-    (httpClient.get as any).mockResolvedValue({ data: dummyNotes, success: true });
+    mockedGet.mockResolvedValue(apiResult(dummyNotes));
     const res = await ticketService.getAllNotes(1);
     expect(res.data).toEqual(dummyNotes);
   });
 
   it('getAllNotes failed path', async () => {
-    (httpClient.get as any).mockResolvedValue({ data: null, success: false });
+    mockedGet.mockResolvedValue(apiResult(null, { success: false, httpCode: 404 }));
     const res = await ticketService.getAllNotes(1);
     expect(res.data).toBeNull();
   });
 
   it('search happy path', async () => {
-    (httpClient.get as any).mockResolvedValue({ data: dummyPagination, success: true });
+    mockedGet.mockResolvedValue(apiResult(dummyPagination));
     const res = await ticketService.search(dummyCriteria, 0, 10);
     expect(res.data).toEqual(dummyPagination);
   });
 
   it('search failed path', async () => {
-    (httpClient.get as any).mockResolvedValue({ data: null, success: false });
+    mockedGet.mockResolvedValue(apiResult(null, { success: false, httpCode: 400 }));
     const res = await ticketService.search(dummyCriteria, 0, 10);
     expect(res.data).toBeNull();
   });
 
   it('searchReport happy path', async () => {
-    (httpClient.get as any).mockResolvedValue({ data: dummyPagination, success: true });
+    mockedGet.mockResolvedValue(apiResult(dummyPagination));
     const res = await ticketService.searchReport(dummyCriteria);
     expect(res.data).toEqual(dummyPagination);
   });
 
   it('searchReport failed path', async () => {
-    (httpClient.get as any).mockResolvedValue({ data: null, success: false });
+    mockedGet.mockResolvedValue(apiResult(null, { success: false, httpCode: 400 }));
     const res = await ticketService.searchReport(dummyCriteria);
     expect(res.data).toBeNull();
   });
 
   it('dashboard happy path', async () => {
-    (httpClient.get as any).mockResolvedValue({ data: dummyDashboard, success: true });
+    mockedGet.mockResolvedValue(apiResult(dummyDashboard));
     const res = await ticketService.dashboard();
     expect(res.data).toEqual(dummyDashboard);
   });
 
   it('dashboard failed path', async () => {
-    (httpClient.get as any).mockResolvedValue({ data: null, success: false });
+    mockedGet.mockResolvedValue(apiResult(null, { success: false, httpCode: 500 }));
     const res = await ticketService.dashboard();
     expect(res.data).toBeNull();
   });
 
   it('findResolvedWithMessages happy path', async () => {
-    (httpClient.get as any).mockResolvedValue({ data: dummyReport, success: true });
+    mockedGet.mockResolvedValue(apiResult(dummyReport));
     const res = await ticketService.findResolvedWithMessages();
     expect(res.data).toEqual(dummyReport);
   });
 
   it('findResolvedWithMessages failed path', async () => {
-    (httpClient.get as any).mockResolvedValue({ data: null, success: false });
+    mockedGet.mockResolvedValue(apiResult(null, { success: false, httpCode: 500 }));
     const res = await ticketService.findResolvedWithMessages();
     expect(res.data).toBeNull();
   });

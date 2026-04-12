@@ -8,23 +8,35 @@ export function useMessage(ticketId?: number) {
   const queryClient = useQueryClient();
 
   // Query: fetch messages by ticketId
-  const {
-    data: messages,
-    isLoading: messagesLoading,
-    error: messagesError,
-    refetch: refetchMessages
-  } = useQuery({
+  const messagesQuery = useQuery<MessageDTO[], Error>({
     queryKey: ["messages", ticketId],
-    queryFn: () =>
-      ticketId !== undefined
-        ? messageService.getMessagesByTicket(ticketId)
-        : Promise.resolve({ data: [], success: true, message: "", httpCode: 200 }),
+    queryFn: async () => {
+      if (ticketId === undefined) {
+        return [];
+      }
+
+      const response = await messageService.getMessagesByTicket(ticketId);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to fetch messages");
+      }
+
+      return response.data ?? [];
+    },
     enabled: ticketId !== undefined,
   });
 
   // Mutation: send a message
-  const sendMessage = useMutation({
-    mutationFn: (message: MessageDTO) => messageService.addMessage(message),
+  const sendMessage = useMutation<MessageDTO | null, Error, MessageDTO>({
+    mutationFn: async (message) => {
+      const response = await messageService.addMessage(message);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to send message");
+      }
+
+      return response.data ?? null;
+    },
     onSuccess: () => {
       if (ticketId !== undefined) {
         queryClient.invalidateQueries({ queryKey: ["messages", ticketId] });
@@ -33,10 +45,7 @@ export function useMessage(ticketId?: number) {
   });
 
   return {
-    messages: messages?.data ?? [],
-    messagesLoading,
-    messagesError,
-    refetchMessages,
+    messagesQuery,
     sendMessage,
   };
 }

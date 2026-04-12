@@ -5,6 +5,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { employeeService } from "@/services/employeeService";
 import type {
   EmployeeDTO,
+  EmployeeDetailDTO,
+  EmployeeDashboardDTO,
   StatusLogDTO,
   ChangePasswordDTO,
   ResetPasswordDTO
@@ -14,93 +16,169 @@ export function useEmployee() {
   const queryClient = useQueryClient();
 
   // Queries
-  const {
-    data: employees,
-    isLoading: isEmployeesLoading,
-    error: employeesError,
-    refetch: refetchEmployees
-  } = useQuery({
+  const getAllUsers = useQuery<EmployeeDTO[], Error>({
     queryKey: ["employees"],
-    queryFn: employeeService.getAllUsers
+    queryFn: async () => {
+      const response = await employeeService.getAllUsers();
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to fetch employees");
+      }
+
+      return response.data ?? [];
+    }
   });
 
-  const {
-    data: profile,
-    isLoading: isProfileLoading,
-    error: profileError,
-    refetch: refetchProfile
-  } = useQuery({
+  const employeeProfile = useQuery<EmployeeDetailDTO | null, Error>({
     queryKey: ["employeeProfile"],
-    queryFn: employeeService.getUserProfile
+    queryFn: async () => {
+      const response = await employeeService.getUserProfile();
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to fetch employee profile");
+      }
+
+      return response.data ?? null;
+    }
   });
 
-  const {
-    data: dashboard,
-    isLoading: isDashboardLoading,
-    error: dashboardError,
-    refetch: refetchDashboard
-  } = useQuery({
+  const employeeDashboard = useQuery<EmployeeDashboardDTO[], Error>({
     queryKey: ["employeeDashboard"],
-    queryFn: employeeService.dashboard
+    queryFn: async () => {
+      const response = await employeeService.dashboard();
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to fetch employee dashboard");
+      }
+
+      return response.data ?? [];
+    }
   });
 
-  const {
-    data: onlineStatus,
-    isLoading: isOnlineStatusLoading,
-    error: onlineStatusError,
-    refetch: refetchOnlineStatus
-  } = useQuery({
+  const employeeOnlineStatus = useQuery<StatusLogDTO | null, Error>({
     queryKey: ["employeeOnlineStatus"],
-    queryFn: employeeService.getOnlineStatus
+    queryFn: async () => {
+      const response = await employeeService.getOnlineStatus();
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to fetch employee online status");
+      }
+
+      return response.data ?? null;
+    }
   });
 
 
   // Mutations
-  const createUser = useMutation({
-    mutationFn: (employeeDTO: EmployeeDTO) => employeeService.createUser(employeeDTO),
+  const createUser = useMutation<EmployeeDTO | null, Error, EmployeeDTO>({
+    mutationFn: async (employeeDTO) => {
+      const response = await employeeService.createUser(employeeDTO);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to create employee");
+      }
+
+      return response.data ?? null;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["employees"] });
     }
   });
 
-  const updateProfile = useMutation({
-    mutationFn: (employeeDTO: EmployeeDTO) => employeeService.updateProfile(employeeDTO),
+  const updateProfile = useMutation<EmployeeDetailDTO | null, Error, EmployeeDTO>({
+    mutationFn: async (employeeDTO) => {
+      const response = await employeeService.updateProfile(employeeDTO);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to update employee profile");
+      }
+
+      return response.data ?? null;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["employeeProfile"] });
     }
   });
 
-  const updateUser = useMutation({
-    mutationFn: (employeeDTO: EmployeeDTO) => employeeService.updateUser(employeeDTO),
+  const updateUser = useMutation<EmployeeDetailDTO | null, Error, EmployeeDTO>({
+    mutationFn: async (employeeDTO) => {
+      const response = await employeeService.updateUser(employeeDTO);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to update employee");
+      }
+
+      return response.data ?? null;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["employeeProfile"] });
     }
   });
 
-  const changePassword = useMutation({
-    mutationFn: (changePasswordDTO: ChangePasswordDTO) => employeeService.changePassword(changePasswordDTO)
+  const changePassword = useMutation<void, Error, ChangePasswordDTO>({
+    mutationFn: async (changePasswordDTO) => {
+      const response = await employeeService.changePassword(changePasswordDTO);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to change password");
+      }
+
+      return response.data ?? undefined;
+    }
   });
 
-  const updateOnlineStatus = useMutation({
-    mutationFn: (logDTO: StatusLogDTO) => employeeService.updateOnlineStatus(logDTO),
+  const updateOnlineStatus = useMutation<void, Error, StatusLogDTO>({
+    mutationFn: async (logDTO) => {
+      const response = await employeeService.updateOnlineStatus(logDTO);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to update online status");
+      }
+
+      return response.data ?? undefined;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["employeeOnlineStatus"] });
     }
   });
 
-  const resetPassword = useMutation({
-    mutationFn: (resetPasswordDTO: ResetPasswordDTO) => employeeService.resetPassword(resetPasswordDTO)
+  const resetPassword = useMutation<void, Error, ResetPasswordDTO>({
+    mutationFn: async (resetPasswordDTO) => {
+      const response = await employeeService.resetPassword(resetPasswordDTO);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to reset password");
+      }
+
+      return response.data ?? undefined;
+    }
   });
 
-  const deleteUser = useMutation({
-    mutationFn: (employeeDTO: EmployeeDTO) => employeeService.deleteUser(employeeDTO),
+  const deleteUser = useMutation<void, Error, EmployeeDTO>({
+    mutationFn: async (employeeDTO) => {
+      const response = await employeeService.deleteUser(employeeDTO);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to delete employee");
+      }
+
+      return response.data ?? undefined;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["employees"] });
     }
   });
 
-  const updateCache = useMutation({
-    mutationFn: () => employeeService.updateCache(),
+  const updateCache = useMutation<StatusLogDTO | null, Error, void>({
+    mutationFn: async () => {
+      const response = await employeeService.updateCache();
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to update employee cache");
+      }
+
+      return response.data ?? null;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["employeeOnlineStatus"] });
     }
@@ -108,22 +186,10 @@ export function useEmployee() {
 
   return {
     // Queries
-    employees: employees?.data ?? [],
-    employeesLoading: isEmployeesLoading,
-    employeesError,
-    refetchEmployees,
-    profile: profile?.data ?? null,
-    profileLoading: isProfileLoading,
-    profileError,
-    refetchProfile,
-    dashboard: dashboard?.data ?? [],
-    dashboardLoading: isDashboardLoading,
-    dashboardError,
-    refetchDashboard,
-    onlineStatus: onlineStatus?.data ?? null,
-    onlineStatusLoading: isOnlineStatusLoading,
-    onlineStatusError,
-    refetchOnlineStatus,
+    getAllUsers,
+    employeeProfile,
+    employeeDashboard,
+    employeeOnlineStatus,
 
     // Mutations
     createUser,
