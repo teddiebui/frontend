@@ -1,5 +1,75 @@
+import { MyDialog } from "@/components/MyDialog";
+import { useTicket } from "@/hooks/useTicket";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 export default function TodayTicket() {
+    const { dashboardQuery } = useTicket();
+    const [lastUpdated, setLastUpdated] = useState(new Date().toLocaleTimeString());
+    const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
+    const [open, setOpen] = useState(false);
+
+    // ✅ derive data trực tiếp
+    const data = dashboardQuery.data?.slice(0, 10) ?? [];
+
+    const metrics = useMemo(() => {
+        return {
+            total: data.length,
+            inProgress: data.filter(t => t.progressStatus.code === 'pending').length,
+            onHold: data.filter(t => t.progressStatus.code === 'on-hold').length,
+            resolved: data.filter(t => t.progressStatus.code === 'resolved').length,
+        };
+    }, [data]);
+
+    useEffect(() => {
+        console.log("selectedTicketId changed:", selectedTicketId);
+
+    }, [selectedTicketId]);
+
+    // ✅ chỉ handle error
+    useEffect(() => {
+        if (dashboardQuery.isError) {
+            toast.error(
+                dashboardQuery.error?.message ||
+                'Không thể tải dữ liệu ticket hôm nay'
+            );
+        }
+    }, [dashboardQuery.isError]);
+
+
+    const handleRefreshDashboard = useCallback(() => {
+        console.log('Refreshing dashboard...');
+        dashboardQuery.refetch();
+        setLastUpdated(new Date().toLocaleTimeString());
+    }, [dashboardQuery]);
+
+    const handleDialogOpenChange = useCallback((nextOpen: boolean) => {
+        setOpen(nextOpen);
+
+        if (!nextOpen) {
+            setSelectedTicketId(null);
+        }
+    }, []);
+
+    const [now, setNow] = useState<number>(new Date().getTime());
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setNow(new Date().getTime());
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    const startElapsedTimer = (now: number, createdAt: number) => {
+        let ms = now - createdAt;
+        ms = ms < 0 ? 0 : ms;
+
+        const totalSeconds = Math.floor(ms / 1000);
+        const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+        const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+        const seconds = String(totalSeconds % 60).padStart(2, '0');
+        return `${hours}:${minutes}:${seconds}`;
+    }
+
     return (
         <div className="dashboard-content page-main-content d-flex flex-column">
             {/* Ticket Section */}
@@ -13,7 +83,7 @@ export default function TodayTicket() {
                             </div>
                             <div className="metric-info">
                                 <h4 className="metric-title">Tổng Ticket</h4>
-                                <p className="metric-value" id="totalTickets">- -</p>
+                                <p className="metric-value" id="totalTickets">{metrics.total}</p>
                             </div>
                         </div>
                     </div>
@@ -24,7 +94,7 @@ export default function TodayTicket() {
                             </div>
                             <div className="metric-info">
                                 <h4 className="metric-title">Đang Xử Lý</h4>
-                                <p className="metric-value" id="inProgressTickets">- -</p>
+                                <p className="metric-value" id="inProgressTickets">{metrics.inProgress}</p>
                             </div>
                         </div>
                     </div>
@@ -35,7 +105,7 @@ export default function TodayTicket() {
                             </div>
                             <div className="metric-info">
                                 <h4 className="metric-title">Đang Chờ</h4>
-                                <p className="metric-value" id="onHoldTickets">- -</p>
+                                <p className="metric-value" id="onHoldTickets">{metrics.onHold}</p>
                             </div>
                         </div>
                     </div>
@@ -46,18 +116,18 @@ export default function TodayTicket() {
                             </div>
                             <div className="metric-info">
                                 <h4 className="metric-title">Đã Xử Lý</h4>
-                                <p className="metric-value" id="resolvedTickets">- -</p>
+                                <p className="metric-value" id="resolvedTickets">{metrics.resolved}</p>
                             </div>
                         </div>
                     </div>
                     <div className="col">
                         <div className="metric-card refresh-container">
-                            <button className="btn-refresh" id="refreshDashboardTicket">
+                            <button className="btn-refresh" id="refreshDashboardTicket" onClick={handleRefreshDashboard}>
                                 <i className="bi bi-arrow-clockwise"></i>
                                 <span>Làm Mới</span>
                             </button>
                             <p className="last-updated">
-                                <small>Cập nhật lúc: <span id="lastUpdated">13:13</span></small>
+                                <small>Cập nhật lúc: <span id="lastUpdated">{lastUpdated}</span></small>
                             </p>
                         </div>
                     </div>
@@ -81,9 +151,57 @@ export default function TodayTicket() {
                     </div>
                 </div>
                 <div className="flex-grow-1" id="ticketList">
+                    {dashboardQuery.isLoading ? (
+                        <><i className="bi bi-arrow-repeat"></i> <span>Đang tải...</span></>
+                    ) : dashboardQuery.isError ? (
+                        <p className="text-danger">Không thể tải dữ liệu ticket hôm nay</p>
+                    ) : data.length === 0 ? (
+                        <div id="no-ticket-result" className="text-center text-muted py-3" style={{ display: 'block' }}>
+                            <i className="bi bi-inbox me-1"></i> Hiện chưa có ticket mới.
+                        </div>
+                    ) : (
+                        data.map(ticket => (
+                            <div className="item mb-2" 
+                            data-ticket-id={ticket.id} 
+                            key={ticket.id} 
+                            onClick={() => {console.log("clicked"); setSelectedTicketId(ticket.id); setOpen(true);}}>
+                                <div className="d-flex flex-row">
+                                    <div className=" w-100 d-flex flex-column me-2">
+                                        <div className="messages mb-1"></div>
+                                        <div className="title mb-1">
+                                            <span className="ticket-id me-2">#{ticket.id}</span> - {ticket.title || "Chưa có tiêu đề"}
+                                            <span className={`ms-2 text-white new-message bg-danger rounded br-sm py-1 px-2 ${ticket.hasNewMessage ? "" : "d-none"}`} style={{
+                                                fontSize: '13px'
+                                            }}> Có tin nhắn</span>
+                                        </div>
+                                        <div className="user">
+                                            <span className="avatar me-2 text-center">
+                                            <img src={ticket.facebookUser.facebookProfilePic} alt="Avatar" />
+                                            </span><i className="bi bi-messenger me-2"></i>{ticket.facebookUser.facebookName || "- -"}
+
+                                        </div>
+                                    </div>
+                                    <div className="w-25 d-flex flex-column justify-content-between me-2">
+                                        <div className="mb-1">
+                                            <i className="bi bi-activity me-2"></i><span className={`badge progress-status ${ticket.progressStatus.code}`}>{ticket.progressStatus.name}</span>
+                                        </div>
+                                        <div className="assignee mb-1"><i className="bi bi-person-check me-2"></i>{ticket.assignee?.name || "Chưa có"}</div>
+                                        <div className="">
+                                        <i className="bi bi-hourglass me-2"></i><span className={`duration ${ticket.progressStatus.id != 3 ? "time-elapse" : ""}`} data-timestamp={ticket.createdAt}>{ticket.progressStatus.id != 3 ? startElapsedTimer(now, ticket.createdAt) : "- -"}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
             </div>
-
+            
+            <MyDialog 
+                open={open} 
+                onOpenChange={handleDialogOpenChange} 
+                selectedTicketId={selectedTicketId == null ? undefined : selectedTicketId}
+                />
             {/* Ticket Detail Modal */}
             <div id="ticketFullDetailModal" className="modal fade ticket-detail-modal" tabIndex={-1} aria-labelledby="ticketFullDetailModalLabel" aria-hidden="true">
                 <div className="modal-dialog modal-xl modal-dialog-scrollable">

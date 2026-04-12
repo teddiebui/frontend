@@ -133,7 +133,7 @@ export interface ProgressStatusDTO {
 export interface TicketDashboardDTO {
     id: number;
     title: string;
-    createdAt: JavaTimestamp;
+    createdAt: number;
     assignee: EmployeeTicketDTO;
     facebookUser: FacebookUserListDTO;
     progressStatus: ProgressStatusDTO;

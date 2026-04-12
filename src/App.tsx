@@ -11,9 +11,10 @@ import Performance from './pages/Performance';
 import Report from './pages/Report';
 import Setting from './pages/Setting';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useState } from 'react';
 
 function App() {
-  const queryClient = new QueryClient();
+  const [queryClient] = useState(() => new QueryClient());
 
   return (
     <QueryClientProvider client={queryClient}>

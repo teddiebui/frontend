@@ -101,8 +101,8 @@ async function request<T = unknown>(config: RequestConfig): Promise<APIResultSet
 export const httpClient = {
     request,
 
-    get<T = unknown>(url: string, data?: unknown, config: ShorthandConfig = {}): Promise<APIResultSet<T>> {
-        return request<T>({ ...config, url, method: 'GET', data });
+    get<T = unknown>(url: string, config: ShorthandConfig = {}): Promise<APIResultSet<T>> {
+        return request<T>({ ...config, url, method: 'GET' });
     },
 
     post<T = unknown>(url: string, data?: unknown, config: ShorthandConfig = {}): Promise<APIResultSet<T>> {

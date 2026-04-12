@@ -16,8 +16,13 @@ import type {
   NoteDTO,
 } from "@/types";
 
-export function useTicket(ticketId?: number) {
+interface UseTicketOptions {
+  enableTicketDetail?: boolean;
+}
+
+export function useTicket(ticketId?: number, options: UseTicketOptions = {}) {
   const queryClient = useQueryClient();
+  const enableTicketDetail = options.enableTicketDetail ?? true;
 
   // Queries
   const ticketDetailQuery = useQuery<TicketDetailDTO | null, Error>({
@@ -35,7 +40,7 @@ export function useTicket(ticketId?: number) {
 
       return response.data ?? null;
     },
-    enabled: !!ticketId,
+    enabled: enableTicketDetail && !!ticketId,
   });
 
   const dashboardQuery = useQuery<TicketDashboardDTO[], Error>({
