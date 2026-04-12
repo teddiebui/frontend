@@ -1,6 +1,11 @@
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import { Toaster } from "sonner";
 import { useAuth } from "@/auth/AuthContext";
+import { useEffect } from "react";
+import { useEmployee } from "@/hooks/useEmployee";
+import type { StatusLogDTO } from "@/types";
+import { toast } from "sonner";
+import { LayoutHeader } from "@/components/LayoutHeader";
 
 interface SidebarItem {
   to: string;
@@ -48,32 +53,12 @@ const sidebarSections: SidebarSection[] = [
   },
 ];
 
-const pageTitles: Array<{ match: string; title: string }> = [
-  { match: '/today-staff', title: 'Bảng Điều Khiển' },
-  { match: '/today-ticket', title: 'Ticket hôm nay' },
-  { match: '/ticket', title: 'Quản Lý Ticket' },
-  { match: '/customer', title: 'Người Dùng' },
-  { match: '/performance', title: 'Hiệu Suất' },
-  { match: '/report', title: 'Báo Cáo' },
-  { match: '/setting', title: 'Nhân viên' },
-];
 
-function getPageTitle(pathname: string): string {
-  const matchedPage = pageTitles.find(({ match }) => pathname.startsWith(match));
-  return matchedPage?.title || 'Bảng Điều Khiển';
-}
+
 
 export default function Layout() {
-  const { logout } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
 
-  const currentPageTitle = getPageTitle(location.pathname);
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login', { replace: true });
-  };
 
   return (
     <div className="page-content">
@@ -114,63 +99,7 @@ export default function Layout() {
       </div>
 
       {/* <!-- Header --> */}
-      <header className="page-header" >
-        <div className="header-left">
-          <button className="btn-toggle-sidebar d-lg-none" id="showSidebar">
-            <i className="bi bi-list"></i>
-          </button>
-          <h2>{currentPageTitle}</h2>
-        </div>
-        <div className="header-right">
-          <div className="date-time">
-            <i className="bi bi-calendar3"></i>
-            <span id="currentDate">--/--/----</span>
-          </div>
-
-          <div className="status-dropdown dropdown">
-            <button className="dropdown-toggle" type="button" id="statusDropdown" aria-expanded="false" data-bs-toggle="dropdown">
-              <span className="status-indicator online"></span>
-              <span id="currentStatusText">Online</span>
-            </button>
-            <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="statusDropdown">
-              <li><button className="dropdown-item" type="button" data-status-id="1">Online</button></li>
-              <li><button className="dropdown-item" type="button" data-status-id="2">Away</button></li>
-            </ul>
-          </div>
-
-
-          <div className="language-dropdown dropdown">
-            <button className="dropdown-toggle" type="button" id="languageDropdown" aria-expanded="false" data-bs-toggle="dropdown">
-              <span id="currentLanguage">VI</span>
-            </button>
-            <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
-              <li><button className="dropdown-item" type="button" onClick={() => console.log('VI')}>VI</button></li>
-              <li><button className="dropdown-item" type="button" onClick={() => console.log('EN')}>EN</button></li>
-            </ul>
-          </div>
-
-
-
-          <div className="user-dropdown dropdown">
-            <button className="dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown"
-              aria-expanded="false">
-              <img src="img/profile-placeholder.jpg" alt="User Avatar" className="user-avatar" />
-            </button>
-            <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-              <li><button className="dropdown-item" type="button" id="user-profile-button"><i className="bi bi-person"></i>
-                Hồ sơ</button></li>
-              <li><button className="dropdown-item" type="button" id="setting-button"><i className="bi bi-gear"></i> Cài
-                đặt</button></li>
-              <li>
-                <hr className="dropdown-divider" />
-              </li>
-              <li><button className="dropdown-item" type="button" onClick={handleLogout}><i className="bi bi-box-arrow-right"></i> Đăng
-                xuất</button>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </header>
+      <LayoutHeader />
 
 
       {/* <!-- Main Content --> */}
