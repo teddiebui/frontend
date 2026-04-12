@@ -1,12 +1,12 @@
 
-
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { Navigate, useLocation, useNavigate } from 'react-router';
 import { useAuth } from '@/auth/AuthContext';
 
 function Login() {
-  const { login } = useAuth();
+  const { login, loading, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -14,14 +14,27 @@ function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const redirectTo =
+    (location.state as { from?: { pathname?: string } } | null)?.from?.pathname || '/';
+
+  if (loading) {
+    return null;
+  }
+
+  if (!loading && user) {
+    return <Navigate to={redirectTo} replace />;
+  }
+
   const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+
     setError(null);
-    const success = await login(username, password);
-    if (success) {
-      navigate('/dashboard');
+
+    const result = await login(username, password);
+    if (result.ok) {
+      navigate(redirectTo, { replace: true });
     } else {
-      setError('Đăng nhập thất bại');
+      setError(result.message || 'Đăng nhập thất bại');
     }
   };
 
@@ -56,7 +69,7 @@ function Login() {
               </div>
             )}
 
-            <form className="" autoComplete="off" onSubmit={handleLogin}>
+            <form className="" onSubmit={handleLogin}>
               <div className="mb-4">
                 <input
                   type="text"
@@ -66,6 +79,7 @@ function Login() {
                   placeholder="Tên đăng nhập"
                   value={username}
                   onChange={e => setUsername(e.target.value)}
+                  autoComplete="username"
                   autoFocus
                 />
                 {/* Hiển thị lỗi dưới input nếu có */}
@@ -86,6 +100,7 @@ function Login() {
                     placeholder="Mật khẩu"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
+                    autoComplete="current-password"
                   />
                   {/* Nút hiện/ẩn password */}
                   <i
@@ -124,12 +139,12 @@ function Login() {
                   <span>Ghi nhớ</span>
                 </div>
                 <div className="forgot-password">
-                  <a href="#" tabIndex={-1}>Quên mật khẩu?</a>
+                  <button type="button" className="forgot-password-link" tabIndex={-1}>Quên mật khẩu?</button>
                 </div>
               </div>
 
-              <button type="submit" className="btn btn-primary w-100">
-                Đăng nhập
+              <button type="submit" className="btn btn-primary w-100" disabled={loading}>
+                {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
               </button>
             </form>
           </div>
@@ -219,6 +234,12 @@ function Login() {
         }
         .documentation {
           font-size: 16px;
+        }
+        .forgot-password-link {
+          border: none;
+          background: transparent;
+          color: inherit;
+          padding: 0;
         }
         a {
           text-decoration: none !important;

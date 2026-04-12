@@ -501,11 +501,13 @@ a {
   top: 10%;
   transform: translate(2%, -4%);
 }
-.sidebar .sidebar-menu li.active a {
+.sidebar .sidebar-menu li.active a,
+.sidebar .sidebar-menu li a.active {
   color: #f8f9fa;
   background-color: #3f51b5;
 }
-.sidebar .sidebar-menu li.active a:hover {
+.sidebar .sidebar-menu li.active a:hover,
+.sidebar .sidebar-menu li a.active:hover {
   background-color: #3849a2;
 }
 
@@ -619,7 +621,7 @@ a {
 .page-header .header-right .language-dropdown .dropdown-toggle .status-indicator.away {
   background-color: #ffc107;
 }
-.page-header .header-right button {
+.page-header .header-right .dropdown-toggle {
   background-color: rgba(171, 171, 171, 0.6705882353);
   border-radius: 4px;
   padding: 4px;

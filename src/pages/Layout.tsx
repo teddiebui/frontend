@@ -1,7 +1,80 @@
-import { Outlet } from "react-router";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import { Toaster } from "sonner";
+import { useAuth } from "@/auth/AuthContext";
+
+interface SidebarItem {
+  to: string;
+  label: string;
+  iconClassName: string;
+}
+
+interface SidebarSection {
+  title: string;
+  label: string;
+  items: SidebarItem[];
+}
+
+const sidebarSections: SidebarSection[] = [
+  {
+    title: 'BẢNG ĐIỀU KHIỂN',
+    label: 'Theo dõi thời gian thực',
+    items: [
+      { to: '/today-staff', label: 'Bảng Điều Khiển', iconClassName: 'bi bi-speedometer2' },
+      { to: '/today-ticket', label: 'Ticket hôm nay', iconClassName: 'bi bi-ticket-perforated' },
+    ],
+  },
+  {
+    title: 'DỮ LIỆU',
+    label: 'Quản lý & tra cứu dữ liệu',
+    items: [
+      { to: '/ticket', label: 'Quản Lý Ticket', iconClassName: 'bi bi-ticket-perforated' },
+      { to: '/customer', label: 'Người Dùng', iconClassName: 'bi bi-people' },
+    ],
+  },
+  {
+    title: 'BÁO CÁO',
+    label: 'Phân tích xu hướng & dữ liệu',
+    items: [
+      { to: '/performance', label: 'Hiệu Suất', iconClassName: 'bi bi-graph-up' },
+      { to: '/report', label: 'Báo Cáo', iconClassName: 'bi bi-bar-chart' },
+    ],
+  },
+  {
+    title: 'CÀI ĐẶT',
+    label: 'Cấu hình hệ thống',
+    items: [
+      { to: '/setting', label: 'Nhân viên', iconClassName: 'bi bi-person-badge' },
+    ],
+  },
+];
+
+const pageTitles: Array<{ match: string; title: string }> = [
+  { match: '/today-staff', title: 'Bảng Điều Khiển' },
+  { match: '/today-ticket', title: 'Ticket hôm nay' },
+  { match: '/ticket', title: 'Quản Lý Ticket' },
+  { match: '/customer', title: 'Người Dùng' },
+  { match: '/performance', title: 'Hiệu Suất' },
+  { match: '/report', title: 'Báo Cáo' },
+  { match: '/setting', title: 'Nhân viên' },
+];
+
+function getPageTitle(pathname: string): string {
+  const matchedPage = pageTitles.find(({ match }) => pathname.startsWith(match));
+  return matchedPage?.title || 'Bảng Điều Khiển';
+}
 
 export default function Layout() {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const currentPageTitle = getPageTitle(location.pathname);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login', { replace: true });
+  };
+
   return (
     <div className="page-content">
       {/* <!-- Sidebar --> */}
@@ -18,74 +91,25 @@ export default function Layout() {
         </div>
 
         <ul className="sidebar-menu">
-          <div className="sidebar-heading" >
-            <div className="title">BẢNG ĐIỀU KHIỂN </div>
-            <div className="label">Theo dõi thời gian thực</div>
-          </div>
-          <li >
-            <a href="/today-staff">
-              <i className="bi bi-speedometer2"></i>
-              <span>Bảng Điều Khiển</span>
-              <i className="bi bi-arrow-right-short"></i>
-            </a>
-          </li>
-          <li className="">
-            <a href="/today-ticket">
-              <i className="bi bi-ticket-perforated"></i>
-              <span>Ticket hôm nay</span>
-              <i className="bi bi-arrow-right-short"></i>
-            </a>
-          </li>
-
-          <div className="sidebar-heading" >
-            <div className="title">DỮ LIỆU </div>
-            <div className="label">Quản lý & tra cứu dữ liệu</div>
-          </div>
-
-          <li >
-            <a href="/ticket">
-              <i className="bi bi-ticket-perforated"></i>
-              <span>Quản Lý Ticket</span>
-              <i className="bi bi-arrow-right-short"></i>
-            </a>
-          </li>
-          <li >
-            <a href="/customer">
-              <i className="bi bi-people"></i>
-              <span>Người Dùng</span>
-              <i className="bi bi-arrow-right-short"></i>
-            </a>
-          </li>
-          <div className="sidebar-heading" >
-            <div className="title">BÁO CÁO </div>
-            <div className="label">Phân tích xu hướng & dữ liệu</div>
-          </div>
-          <li  >
-            <a href="/performance">
-              <i className="bi bi-graph-up"></i>
-              <span>Hiệu Suất</span>
-              <i className="bi bi-arrow-right-short"></i>
-            </a>
-          </li>
-          <li  >
-            <a href="/report">
-              <i className="bi bi-bar-chart"></i>
-              <span>Báo Cáo</span>
-              <i className="bi bi-arrow-right-short"></i>
-            </a>
-          </li>
-
-          <div className="sidebar-heading" >
-            <div className="title">CÀI ĐẶT</div>
-            <div className="label">Cấu hình hệ thống</div>
-          </div>
-          <li  >
-            <a href="/setting">
-              <i className="bi bi-person-badge"></i>
-              <span>Nhân viên</span>
-              <i className="bi bi-arrow-right-short"></i>
-            </a>
-          </li>
+          {sidebarSections.map((section) => (
+            <li key={section.title}>
+              <div className="sidebar-heading">
+                <div className="title">{section.title}</div>
+                <div className="label">{section.label}</div>
+              </div>
+              <ul>
+                {section.items.map((item) => (
+                  <li key={item.to}>
+                    <NavLink to={item.to} className={({ isActive }) => (isActive ? 'active' : '')}>
+                      <i className={item.iconClassName}></i>
+                      <span>{item.label}</span>
+                      <i className="bi bi-arrow-right-short"></i>
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            </li>
+          ))}
         </ul>
       </div>
 
@@ -95,7 +119,7 @@ export default function Layout() {
           <button className="btn-toggle-sidebar d-lg-none" id="showSidebar">
             <i className="bi bi-list"></i>
           </button>
-          <h2>Bảng Điều Khiển</h2>
+          <h2>{currentPageTitle}</h2>
         </div>
         <div className="header-right">
           <div className="date-time">
@@ -109,8 +133,8 @@ export default function Layout() {
               <span id="currentStatusText">Online</span>
             </button>
             <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="statusDropdown">
-              <li><a className="dropdown-item" href="#" data-status-id="1">Online</a></li>
-              <li><a className="dropdown-item" href="#" data-status-id="2">Away</a></li>
+              <li><button className="dropdown-item" type="button" data-status-id="1">Online</button></li>
+              <li><button className="dropdown-item" type="button" data-status-id="2">Away</button></li>
             </ul>
           </div>
 
@@ -120,8 +144,8 @@ export default function Layout() {
               <span id="currentLanguage">VI</span>
             </button>
             <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
-              <li><a className="dropdown-item" href="#" onClick={() => console.log('VI')}>VI</a></li>
-              <li><a className="dropdown-item" href="#" onClick={() => console.log('EN')}>EN</a></li>
+              <li><button className="dropdown-item" type="button" onClick={() => console.log('VI')}>VI</button></li>
+              <li><button className="dropdown-item" type="button" onClick={() => console.log('EN')}>EN</button></li>
             </ul>
           </div>
 
@@ -133,15 +157,15 @@ export default function Layout() {
               <img src="img/profile-placeholder.jpg" alt="User Avatar" className="user-avatar" />
             </button>
             <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-              <li><a className="dropdown-item" href="#" id="user-profile-button"><i className="bi bi-person"></i>
-                Hồ sơ</a></li>
-              <li><a className="dropdown-item" href="#" id="setting-button"><i className="bi bi-gear"></i> Cài
-                đặt</a></li>
+              <li><button className="dropdown-item" type="button" id="user-profile-button"><i className="bi bi-person"></i>
+                Hồ sơ</button></li>
+              <li><button className="dropdown-item" type="button" id="setting-button"><i className="bi bi-gear"></i> Cài
+                đặt</button></li>
               <li>
                 <hr className="dropdown-divider" />
               </li>
-              <li><a className="dropdown-item" href="/logout"><i className="bi bi-box-arrow-right"></i> Đăng
-                xuất</a>
+              <li><button className="dropdown-item" type="button" onClick={handleLogout}><i className="bi bi-box-arrow-right"></i> Đăng
+                xuất</button>
               </li>
             </ul>
           </div>
