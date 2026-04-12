@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
@@ -7,36 +7,38 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useEmployee } from '@/hooks/useEmployee';
 import { toast } from 'sonner';
+import { formatElapsed, useNow } from '@/hooks/useNow';
 
-function formatTime(from: string): string {
-    // from: ISO string, format to HH:mm:ss
-    const date = new Date(from);
-    return date.toLocaleTimeString('vi-VN', { hour12: false });
-}
+
 
 export default function TodayStaff() {
     const {
         employeeDashboard: { data, isLoading, error, refetch },
     } = useEmployee();
 
+    const now = useNow(); // 🔥 chỉ 1 timer cho toàn bộ table
+
     useEffect(() => {
         refetch();
     }, [refetch]);
 
-    // Toast khi fetch thành công
     useEffect(() => {
         if (!isLoading && !error) {
-            toast.success('Dashboard tải thành công!');
+            toast.success('Dashboard tải thành công!', {
+                description: 'Dữ liệu nhân viên đã được cập nhật',
+                action: {
+                    label: 'Reload',
+                    onClick: () => refetch(),
+                },
+            });
         }
     }, [isLoading, error]);
 
-    // Toast khi fetch thất bại
     useEffect(() => {
         if (error) {
             toast.error('Dashboard tải thất bại!');
         }
     }, [error]);
-
 
     return (
         <div className="dashboard-content page-main-content d-flex flex-column">
@@ -51,6 +53,7 @@ export default function TodayStaff() {
                             {data ? data.length : 0}
                         </Badge>
                     </CardHeader>
+
                     <CardContent>
                         {isLoading ? (
                             <Skeleton className="h-48 w-full" />
@@ -59,37 +62,43 @@ export default function TodayStaff() {
                                 <AlertDescription>{error.message}</AlertDescription>
                             </Alert>
                         ) : (
-                            <Table id="employeeTable" className="table table-hover">
+                            <Table className="table table-hover">
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead data-sort="name">Tên nhân viên</TableHead>
-                                        <TableHead data-sort="userGroup">Vai trò</TableHead>
-                                        <TableHead data-sort="ticketCount">Số lượng ticket</TableHead>
-                                        <TableHead data-sort="status">Trạng thái</TableHead>
-                                        <TableHead data-sort="statusTime">Thời gian trạng thái</TableHead>
+                                        <TableHead>Tên nhân viên</TableHead>
+                                        <TableHead>Vai trò</TableHead>
+                                        <TableHead>Số lượng ticket</TableHead>
+                                        <TableHead>Trạng thái</TableHead>
+                                        <TableHead>Thời gian trạng thái</TableHead>
                                     </TableRow>
                                 </TableHeader>
-                                <TableBody id="employeeList2" className="position-relative">
+
+                                <TableBody>
                                     {data && data.length > 0 ? (
-                                        data.map((emp) => (
-                                            <TableRow className="show" key={emp.username}>
-                                                <TableCell>{emp.name}</TableCell>
-                                                <TableCell>{emp.userGroup?.code || ''}</TableCell>
-                                                <TableCell>{emp.ticketCount}</TableCell>
-                                                <TableCell style={{ textTransform: 'capitalize' }}>
-                                                    <span
-                                                        className={`status-indicator ${emp.statusLog?.status?.name === 'online' ? 'online' : 'offline'}`}
-                                                    ></span>
-                                                    {emp.statusLog?.status?.name || ''}
-                                                </TableCell>
-                                                <TableCell
-                                                    className="time-elapse"
-                                                    data-timestamp={emp.statusLog?.from ? new Date(emp.statusLog.from).getTime() : ''}
-                                                >
-                                                    {emp.statusLog?.from ? formatTime(emp.statusLog.from) : ''}
-                                                </TableCell>
-                                            </TableRow>
-                                        ))
+                                        data.map((emp) => {
+                                            const startTs = emp.statusLog?.from
+                                                ? new Date(emp.statusLog.from).getTime()
+                                                : undefined;
+
+                                            return (
+                                                <TableRow key={emp.username}>
+                                                    <TableCell>{emp.name}</TableCell>
+                                                    <TableCell>{emp.userGroup?.name || ''}</TableCell>
+                                                    <TableCell>{emp.ticketCount}</TableCell>
+
+                                                    <TableCell style={{ textTransform: 'capitalize' }}>
+                                                        <span
+                                                            className={`status-indicator ${emp.statusLog?.status?.name}`}
+                                                        />
+                                                        {emp.statusLog?.status?.name || ''}
+                                                    </TableCell>
+
+                                                    <TableCell>
+                                                        {emp.statusLog?.status.name != 'offline' ? formatElapsed(startTs, now) : '- -'}
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })
                                     ) : (
                                         <TableRow>
                                             <TableCell colSpan={5} className="text-center">

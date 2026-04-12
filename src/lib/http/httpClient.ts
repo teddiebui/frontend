@@ -74,8 +74,6 @@ async function request<T = unknown>(config: RequestConfig): Promise<APIResultSet
     };
 
     try {
-
-        console.log("request url:", buildUrl(url, params));
         const res = await fetch(buildUrl(url, params), fetchOptions);
         clearTimeout(timeoutId);
 

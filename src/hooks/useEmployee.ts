@@ -9,7 +9,8 @@ import type {
   EmployeeDashboardDTO,
   StatusLogDTO,
   ChangePasswordDTO,
-  ResetPasswordDTO
+  ResetPasswordDTO,
+  APIResultSet
 } from "@/types";
 
 export function useEmployee() {
@@ -127,7 +128,7 @@ export function useEmployee() {
     }
   });
 
-  const updateOnlineStatus = useMutation<void, Error, StatusLogDTO>({
+  const updateOnlineStatus = useMutation<APIResultSet<StatusLogDTO>, Error, StatusLogDTO>({
     mutationFn: async (logDTO) => {
       const response = await employeeService.updateOnlineStatus(logDTO);
 
@@ -135,7 +136,7 @@ export function useEmployee() {
         throw new Error(response.message || "Failed to update online status");
       }
 
-      return response.data ?? undefined;
+      return response || undefined;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["employeeOnlineStatus"] });

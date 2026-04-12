@@ -9,6 +9,7 @@ import type {
   StatusLogDTO,
   ChangePasswordDTO,
   ResetPasswordDTO,
+  APIResultSet,
 } from "@/types";
 
 const BASE_EMPLOYEE_URL = "/employee-management";
@@ -56,7 +57,7 @@ export const employeeService = {
 
   /** Cập nhật online status user hiện tại */
   updateOnlineStatus: (logDTO: StatusLogDTO) =>
-    httpClient.put<void>(`${BASE_EMPLOYEE_URL}/me/online-status`, logDTO),
+    httpClient.put<StatusLogDTO>(`${BASE_EMPLOYEE_URL}/me/online-status`, logDTO),
 
   /** Reset mật khẩu user (SUPERVISOR) */
   resetPassword: (resetPasswordDTO: ResetPasswordDTO) =>
