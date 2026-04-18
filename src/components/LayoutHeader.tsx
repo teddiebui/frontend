@@ -3,7 +3,7 @@ import { useEmployee } from "@/hooks/useEmployee";
 import { updateTime, useNow } from "@/hooks/useNow";
 import type { StatusLogDTO } from "@/types";
 import { useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { toast } from "sonner";
 
 const pageTitles: Array<{ match: string; title: string }> = [
@@ -25,6 +25,7 @@ function getPageTitle(pathname: string): string {
 export function LayoutHeader() {
     const { logout } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
     const handleLogout = async () => {
         await logout();
         navigate('/login', { replace: true });
@@ -33,6 +34,9 @@ export function LayoutHeader() {
     const currentPageTitle = getPageTitle(location.pathname);
     const { employeeOnlineStatus, updateOnlineStatus } = useEmployee();
     const { user } = useAuth();
+    const currentStatusName = employeeOnlineStatus.data?.status.name || 'Away';
+    const currentStatusCode = currentStatusName.toLowerCase();
+
     const handleUpdateOnlineStatus = (status: 'online' | 'away') => {
         const statusLog: StatusLogDTO = {
             username: user?.username || '',
@@ -40,12 +44,12 @@ export function LayoutHeader() {
                 id: status === 'online' ? 1 : 2,
                 name: status === 'online' ? 'Online' : 'Away',
             },
-            from: new Date().toISOString(),
+            from: Date.now(),
         }
 
         updateOnlineStatus.mutate(statusLog, {
             onError: (error) => toast.error(error.message || 'Cập nhật trạng thái thất bại'),
-            onSuccess: (data, variables, onMutateResult, context) => toast.success(data.message || 'Cập nhật trạng thái thành công'),
+            onSuccess: (data) => toast.success(data.message || 'Cập nhật trạng thái thành công'),
         });
     }
 
@@ -76,7 +80,7 @@ export function LayoutHeader() {
         <>
             <header className="page-header" >
                 <div className="header-left">
-                    <button className="btn-toggle-sidebar d-lg-none" id="showSidebar">
+                    <button className="btn-toggle-sidebar lg:hidden" id="showSidebar">
                         <i className="bi bi-list"></i>
                     </button>
                     <h2>{currentPageTitle}</h2>
@@ -89,8 +93,8 @@ export function LayoutHeader() {
 
                     <div className="status-dropdown dropdown">
                         <button className="dropdown-toggle" type="button" id="statusDropdown" aria-expanded="false" data-bs-toggle="dropdown">
-                            <span className={`status-indicator ${employeeOnlineStatus.data?.status.name.toLowerCase() || 'away'}`}></span>
-                            <span id="currentStatusText">{employeeOnlineStatus.data?.status.name === 'online' ? 'Online' : 'Away'}</span>
+                            <span className={`status-indicator ${currentStatusCode}`}></span>
+                            <span id="currentStatusText">{currentStatusCode === 'online' ? 'Online' : 'Away'}</span>
                         </button>
                         <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="statusDropdown">
                             <li><button className="dropdown-item" type="button" data-status-id="1"

@@ -1,10 +1,5 @@
-import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
+import { NavLink, Outlet } from "react-router";
 import { Toaster } from "sonner";
-import { useAuth } from "@/auth/AuthContext";
-import { useEffect } from "react";
-import { useEmployee } from "@/hooks/useEmployee";
-import type { StatusLogDTO } from "@/types";
-import { toast } from "sonner";
 import { LayoutHeader } from "@/components/LayoutHeader";
 
 interface SidebarItem {
@@ -57,9 +52,6 @@ const sidebarSections: SidebarSection[] = [
 
 
 export default function Layout() {
-
-
-
   return (
     <div className="page-content">
       {/* <!-- Sidebar --> */}
@@ -70,7 +62,7 @@ export default function Layout() {
             <i className="bi bi-shield-plus"></i>
             <span>Help Desk</span>
           </div>
-          <button className="btn-toggle-sidebar d-lg-none" id="toggleSidebar">
+          <button className="btn-toggle-sidebar lg:hidden" id="toggleSidebar">
             <i className="bi bi-x-lg"></i>
           </button>
         </div>
@@ -106,7 +98,7 @@ export default function Layout() {
       <Outlet />
 
       {/* <!-- Footer --> */}
-      <footer className="footer mt-auto py-3 text-center">
+      <footer className="footer">
         <span>&copy; 2025 Thiên An Phú - Customer Help Desk</span>
       </footer>
 

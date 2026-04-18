@@ -1,5 +1,4 @@
-
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
@@ -8,6 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useEmployee } from '@/hooks/useEmployee';
 import { toast } from 'sonner';
 import { formatElapsed, useNow } from '@/hooks/useNow';
+import { Users } from 'lucide-react';
 
 
 
@@ -41,16 +41,18 @@ export default function TodayStaff() {
     }, [error]);
 
     return (
-        <div className="dashboard-content page-main-content d-flex flex-column">
+        <div className="ui-page-container min-h-full">
             <div className="mb-4" id="employeeSection">
-                <Card className="employee-card">
-                    <CardHeader className="card-header">
-                        <CardTitle className="card-title d-flex align-items-center gap-2">
-                            <i className="bi bi-people-fill"></i>
-                            Danh Sách Nhân Viên
-                        </CardTitle>
-                        <Badge className="badge bg-primary employee-count">
-                            {data ? data.length : 0}
+                <Card className="ui-surface">
+                    <CardHeader className="ui-section-header">
+                        <div>
+                            <CardTitle className="flex items-center gap-2 text-xl">
+                                <Users className="size-5" />
+                                Danh Sách Nhân Viên
+                            </CardTitle>
+                        </div>
+                        <Badge variant="outline" className="h-10 rounded-2xl border-[var(--border-soft)] bg-[var(--surface-subtle)] px-4 text-sm text-slate-700">
+                            {data ? data.length : 0} nhân viên
                         </Badge>
                     </CardHeader>
 
@@ -62,7 +64,7 @@ export default function TodayStaff() {
                                 <AlertDescription>{error.message}</AlertDescription>
                             </Alert>
                         ) : (
-                            <Table className="table table-hover">
+                            <Table>
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Tên nhân viên</TableHead>
@@ -86,11 +88,13 @@ export default function TodayStaff() {
                                                     <TableCell>{emp.userGroup?.name || ''}</TableCell>
                                                     <TableCell>{emp.ticketCount}</TableCell>
 
-                                                    <TableCell style={{ textTransform: 'capitalize' }}>
-                                                        <span
-                                                            className={`status-indicator ${emp.statusLog?.status?.name}`}
-                                                        />
-                                                        {emp.statusLog?.status?.name || ''}
+                                                    <TableCell className="capitalize">
+                                                        <span className="inline-flex items-center gap-2 rounded-full border border-[var(--border-soft)] bg-[var(--surface-subtle)] px-3 py-1 text-xs font-medium">
+                                                            <span
+                                                                className={`status-indicator ${emp.statusLog?.status?.name}`}
+                                                            />
+                                                            {emp.statusLog?.status?.name || ''}
+                                                        </span>
                                                     </TableCell>
 
                                                     <TableCell>
