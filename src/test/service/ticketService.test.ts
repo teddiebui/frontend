@@ -26,13 +26,16 @@ describe('ticketService', () => {
   const mockedPost = vi.mocked(httpClient.post);
   const mockedPut = vi.mocked(httpClient.put);
   const mockedDelete = vi.mocked(httpClient.delete);
+  const createdAt = 1704067200000;
+  const updatedAt = 1704067200000;
+  const closedAt = 1704153600000;
 
   const dummyTicket: TicketDetailDTO = {
     id: 1,
     title: 'Test Ticket',
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-01T00:00:00Z',
-    closedAt: '2024-01-02T00:00:00Z',
+    createdAt,
+    updatedAt,
+    closedAt,
     progressStatus: { id: 1, name: 'Open', code: 'OPEN' },
     category: { id: 1, code: 'GEN', name: 'General' },
     assignee: {
@@ -43,7 +46,7 @@ describe('ticketService', () => {
       description: '',
       email: '',
       phone: '',
-      createdAt: '2024-01-01T00:00:00Z',
+      createdAt,
       isActive: true,
       failedLoginCount: 0,
       statusLogs: [],
@@ -58,9 +61,9 @@ describe('ticketService', () => {
     {
       id: 1,
       title: 'Test Ticket',
-      createdAt: '2024-01-01T00:00:00Z',
-      updatedAt: '2024-01-01T00:00:00Z',
-      closedAt: '2024-01-02T00:00:00Z',
+      createdAt,
+      updatedAt,
+      closedAt,
       progressStatus: { id: 1, name: 'Open', code: 'OPEN' },
       category: { id: 1, code: 'GEN', name: 'General' },
       assignee: dummyTicket.assignee,
@@ -73,7 +76,7 @@ describe('ticketService', () => {
     {
       id: 1,
       title: 'Test Ticket',
-      createdAt: '2024-01-01T00:00:00Z',
+      createdAt,
       assignee: { username: 'assignee', name: 'Assignee', group: dummyTicket.assignee.userGroup },
       facebookUser: dummyTicket.facebookUser,
       progressStatus: dummyTicket.progressStatus,
@@ -94,7 +97,7 @@ describe('ticketService', () => {
     },
   ];
   const dummyNotes: Set<NoteDTO> = new Set([
-    { id: 1, text: 'Note', ticketId: 1, timestamp: '2024-01-01T00:00:00Z' },
+    { id: 1, text: 'Note', ticketId: 1, timestamp: createdAt },
   ]);
   const dummyPagination: PaginationResponse<TicketListDTO> = {
     content: dummyList,
@@ -184,13 +187,13 @@ describe('ticketService', () => {
 
   it('addNote happy path', async () => {
     mockedPut.mockResolvedValue(apiResult(null));
-    const res = await ticketService.addNote(1, { id: 1, text: 'Note', ticketId: 1, timestamp: '2024-01-01T00:00:00Z' });
+    const res = await ticketService.addNote(1, { id: 1, text: 'Note', ticketId: 1, timestamp: createdAt });
     expect(res.success).toBe(true);
   });
 
   it('addNote failed path', async () => {
     mockedPut.mockResolvedValue(apiResult(null, { success: false, message: 'Add note failed', httpCode: 400 }));
-    const res = await ticketService.addNote(1, { id: 1, text: 'Note', ticketId: 1, timestamp: '2024-01-01T00:00:00Z' });
+    const res = await ticketService.addNote(1, { id: 1, text: 'Note', ticketId: 1, timestamp: createdAt });
     expect(res.success).toBe(false);
   });
 

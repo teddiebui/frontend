@@ -22,7 +22,7 @@ describe("employeeService", () => {
     description: "desc",
     email: "john@example.com",
     phone: "123456789",
-    createdAt: "2024-01-01T00:00:00Z",
+    createdAt: 1704067200000,
     isActive: true,
     failedLoginCount: 0,
     statusLogs: [],
@@ -32,11 +32,11 @@ describe("employeeService", () => {
     username: "johndoe",
     name: "John Doe",
     description: "desc",
-    statusLog: { status: { id: 1, name: "Online" }, from: "2024-01-01T00:00:00Z", username: "johndoe" },
+    statusLog: { status: { id: 1, name: "Online" }, from: 1704067200000, username: "johndoe" },
     userGroup: employee.userGroup,
     ticketCount: 5,
   };
-  const statusLog: StatusLogDTO = { status: { id: 1, name: "Online" }, from: "2024-01-01T00:00:00Z", username: "johndoe" };
+  const statusLog: StatusLogDTO = { status: { id: 1, name: "Online" }, from: 1704067200000, username: "johndoe" };
   const changePassword: ChangePasswordDTO = { password: "old", newPassword: "new" };
   const resetPassword: ResetPasswordDTO = { username: "johndoe", defaultPassword: "default" };
 

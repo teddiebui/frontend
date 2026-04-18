@@ -14,7 +14,7 @@ describe("authService", () => {
     description: "desc",
     email: "john@example.com",
     phone: "123456789",
-    createdAt: "2024-01-01T00:00:00Z",
+    createdAt: 1704067200000,
     isActive: true,
     failedLoginCount: 0,
     statusLogs: [],

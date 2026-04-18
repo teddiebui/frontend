@@ -31,7 +31,7 @@ describe('facebookUserService', () => {
     email: 'test@example.com',
     phone: '123456789',
     zalo: 'zaloid',
-    createdAt: '2024-01-01T00:00:00Z',
+    createdAt: 1704067200000,
   };
 
   function apiResult<T>(

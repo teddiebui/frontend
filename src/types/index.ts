@@ -5,10 +5,6 @@ export interface APIResultSet<T> {
     success: boolean;
 }
 
-export type JavaTimestamp = string;
-export type JavaInstant = string;
-export type EpochMillis = number;
-
 export interface ValidationResult {
     fieldErrors: Record<string, string>;
 }
@@ -51,7 +47,7 @@ export interface AttachmentDTO {
 
 export interface MessageDTO {
     id: number;
-    timestamp: JavaTimestamp;
+    timestamp: number;
     text: string;
     senderEmployee: boolean;
     ticketId: number;
@@ -89,7 +85,7 @@ export interface FacebookUserDetailDTO {
     email: string;
     phone: string;
     zalo: string;
-    createdAt: JavaInstant;
+    createdAt: number;
 }
 
 export interface FacebookUserExportDTO {
@@ -99,7 +95,7 @@ export interface FacebookUserExportDTO {
     email: string;
     phone: string;
     zalo: string;
-    createdAt: JavaInstant;
+    createdAt: number;
 }
 
 export interface FacebookUserFetchDTO {
@@ -145,7 +141,7 @@ export interface MessageEventDTO {
     ticket: TicketDashboardDTO;
     text: string;
     senderEmployee: boolean;
-    timestamp: JavaTimestamp;
+    timestamp: number;
     senderSystem: boolean;
     attachments: AttachmentDTO[];
 }
@@ -171,7 +167,7 @@ export interface StatusDTO {
 
 export interface StatusLogDTO {
     status: StatusDTO;
-    from: JavaTimestamp;
+    from: number;
     username: string;
 }
 
@@ -183,7 +179,7 @@ export interface EmployeeDTO {
     description: string;
     email: string;
     phone: string;
-    createdAt: JavaTimestamp;
+    createdAt: number;
     isActive: boolean;
     failedLoginCount: number;
     statusLogs: StatusLogDTO[];
@@ -197,7 +193,7 @@ export interface EmployeeDetailDTO {
     description: string;
     email: string;
     phone: string;
-    createdAt: JavaTimestamp;
+    createdAt: number;
     isActive: boolean;
     failedLoginCount: number;
 }
@@ -245,7 +241,7 @@ export interface NoteDTO {
     id: number;
     text: string;
     ticketId: number;
-    timestamp: JavaTimestamp;
+    timestamp: number;
 }
 
 export interface AssigneeDTO {
@@ -302,7 +298,7 @@ export interface TicketAssessmentDetailDTO {
     ticketId: number;
     assignee: string;
     evaluatedBy: string;
-    evaluatedAt: EpochMillis;
+    evaluatedAt: number;
     passed: boolean;
     firstResponseTime: number;
     avgResponseTime: number;
@@ -317,7 +313,7 @@ export interface TicketAssessmentListDTO {
     ticketId: number;
     assigneeUsername: string;
     evaluatedBy: string;
-    evaluatedAt: EpochMillis;
+    evaluatedAt: number;
     passed: boolean;
 }
 
@@ -335,9 +331,9 @@ export interface TagDTO {
 export interface TicketDetailDTO {
     id: number;
     title: string;
-    createdAt: JavaTimestamp;
-    updatedAt: JavaTimestamp;
-    closedAt: JavaTimestamp;
+    createdAt: number;
+    updatedAt: number;
+    closedAt: number;
     progressStatus: ProgressStatusDTO;
     category: CategoryDTO;
     assignee: EmployeeDTO;
@@ -351,9 +347,9 @@ export interface TicketDetailDTO {
 export interface TicketListDTO {
     id: number;
     title: string;
-    createdAt: JavaTimestamp;
-    updatedAt: JavaTimestamp;
-    closedAt: JavaTimestamp;
+    createdAt: number;
+    updatedAt: number;
+    closedAt: number;
     progressStatus: ProgressStatusDTO;
     category: CategoryDTO;
     assignee: EmployeeDTO;
@@ -364,7 +360,7 @@ export interface TicketListDTO {
 
 export interface TicketPerformanceDTO {
     id: number;
-    createdAt: JavaTimestamp;
+    createdAt: number;
     assignee: EmployeeTicketDTO;
     messages: MessageDTO[];
 }
@@ -373,8 +369,8 @@ export interface TicketReportDTO {
     id: number;
     username: string;
     name: string;
-    createdAt: EpochMillis;
-    closedAt: EpochMillis;
+    createdAt: number;
+    closedAt: number;
     firstResponseTime: number;
     avgResponseTime: number;
     resolutionTime: number;
@@ -387,8 +383,8 @@ export interface TicketSearchCriteria {
     title: string;
     tag: string;
     progressStatus: number;
-    fromTime: EpochMillis;
-    toTime: EpochMillis;
+    fromTime: number;
+    toTime: number;
     category: number;
     emotion: number;
     satisfaction: number;
@@ -396,7 +392,7 @@ export interface TicketSearchCriteria {
 
 export interface TicketVolumeReportDTO {
     id: number;
-    createdAt: JavaTimestamp;
+    createdAt: number;
 }
 
 export interface WebHookEventQuickReplyDTO {
@@ -434,13 +430,13 @@ export interface WebHookEventMessageDTO {
 export interface WebHookEventMessagingDTO {
     sender: WebHookEventUserDTO;
     recipient: WebHookEventUserDTO;
-    timestamp: EpochMillis;
+    timestamp: number;
     message: WebHookEventMessageDTO;
 }
 
 export interface WebHookEventEntryDTO {
     id: string;
-    time: EpochMillis;
+    time: number;
     messaging: WebHookEventMessagingDTO[];
 }
 
