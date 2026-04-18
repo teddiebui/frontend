@@ -36,6 +36,8 @@ function App() {
           </Route>
 
           <Route path="/login" element={<Login />} />
+          <Route path="/terms" element={<Login />} />
+          <Route path="/privacy" element={<Login />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

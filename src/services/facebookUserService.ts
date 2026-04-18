@@ -47,7 +47,7 @@ export const facebookUserService = {
   exportExcel: (criteria: Partial<FacebookUserSearchCriteria>) =>
     httpClient.get<Blob>(
       `${BASE_FACEBOOK_USER_URL}/export-excel`,
-      { params: { ...criteria }, responseType: 'blob' }
+      { params: { ...criteria },}
     ),
 
   /** Delete multiple users by ids */
