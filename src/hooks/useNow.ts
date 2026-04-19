@@ -17,7 +17,11 @@ export function formatElapsed(startTimestamp?: number, now?: number) {
 export function updateTime(timestamp: number) {
     const now = new Date(timestamp);
     const currentDate = now.toLocaleDateString('vi-VN');
-    const currentTime = now.toLocaleTimeString('vi-VN', { hour12: false });
+    const currentTime = now.toLocaleTimeString('vi-VN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+    });
 
     return `${currentDate} ${currentTime}`;
 }
@@ -26,11 +30,29 @@ export function useNow(intervalMs = 1000) {
     const [now, setNow] = useState(Date.now());
 
     useEffect(() => {
-        const id = setInterval(() => {
+        if (intervalMs <= 0) {
             setNow(Date.now());
-        }, intervalMs);
+            return undefined;
+        }
 
-        return () => clearInterval(id);
+        let intervalId: ReturnType<typeof setInterval> | undefined;
+
+        const tick = () => {
+            setNow(Date.now());
+        };
+
+        const timeoutDelay = intervalMs - (Date.now() % intervalMs);
+        const timeoutId = setTimeout(() => {
+            tick();
+            intervalId = setInterval(tick, intervalMs);
+        }, timeoutDelay);
+
+        return () => {
+            clearTimeout(timeoutId);
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+        };
     }, [intervalMs]);
 
     return now;
