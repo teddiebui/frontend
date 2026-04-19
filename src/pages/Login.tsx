@@ -1,6 +1,3 @@
-import { GalleryVerticalEnd } from "lucide-react"
-
-
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -13,8 +10,6 @@ import {
   Field,
   FieldDescription,
   FieldGroup,
-  FieldLabel,
-  FieldSeparator,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Link, Navigate, useLocation, useNavigate } from "react-router"
@@ -29,7 +24,6 @@ export default function LoginPage() {
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const redirectTo =
@@ -129,11 +123,9 @@ export default function LoginPage() {
                   </Field>
                 </FieldGroup>
 
-                <FieldDescription className="p-6 text-center">
-                  <div className="text-sm text-muted-foreground flex items-center justify-center gap-5">
-                    <Link to="/terms">Terms of Service</Link>
-                    <Link to="/privacy">Privacy Policy</Link>
-                  </div>
+                <FieldDescription className="flex items-center justify-center gap-5 p-6 text-center">
+                  <Link to="/terms">Terms of Service</Link>
+                  <Link to="/privacy">Privacy Policy</Link>
                 </FieldDescription>
               </form>
             </CardContent>

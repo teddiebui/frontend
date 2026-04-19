@@ -1,73 +1,50 @@
-# React + TypeScript + Vite
+# Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend admin application for the customer help desk system.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Vite 8
+- React 19
+- TypeScript
+- React Router 7
+- TanStack Query
+- Tailwind CSS 4
+- Vitest
 
-## React Compiler
+## Scripts
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- `npm run dev`: start the Vite development server
+- `npm run build`: type-check and build production assets
+- `npm run preview`: preview the production build locally
+- `npm run test`: run the Vitest suite
+- `npm run coverage`: run tests with coverage reporting
 
-## Expanding the ESLint configuration
+## Source Layout
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- `src/App.tsx`: application providers and route tree
+- `src/pages`: route-level screens
+- `src/components`: shared UI and layout components
+- `src/auth`: authentication context and route protection
+- `src/hooks`: React Query and UI hooks
+- `src/services`: API client wrappers for backend resources
+- `src/lib`: shared utilities, HTTP client, and navigation config
+- `src/types`: DTO and shared TypeScript contracts
+- `src/tests/services`: service-layer unit tests
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Conventions
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- Use the `@` alias for imports from `src`
+- Keep API calls in `src/services`, not inside components
+- Keep route screens in `src/pages` and shared UI in `src/components`
+- Add or update service tests in `src/tests/services`
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Development Notes
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+- API requests are proxied through Vite via `/api` during local development
+- Theme handling is provided by `next-themes`
+- The app shell is built around a protected layout with sidebar navigation
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Testing
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Service tests use Vitest with mocked `httpClient` calls. When adding a new backend resource, keep the matching test beside the other service tests in `src/tests/services`.

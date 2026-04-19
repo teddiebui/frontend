@@ -12,6 +12,8 @@ import Report from './pages/Report';
 import Setting from './pages/Setting';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
 
 function App() {
   const [queryClient] = useState(() => new QueryClient());
@@ -36,8 +38,8 @@ function App() {
           </Route>
 
           <Route path="/login" element={<Login />} />
-          <Route path="/terms" element={<Login />} />
-          <Route path="/privacy" element={<Login />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
