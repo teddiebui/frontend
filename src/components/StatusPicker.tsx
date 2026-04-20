@@ -7,6 +7,7 @@ import {
     DropdownMenuRadioItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useEmployee } from "@/hooks/useEmployee";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -32,6 +33,10 @@ export function StatusPicker() {
         setStatus(parsedStatus);
         toast.success(`Trạng thái tạm thời được chuyển sang ${parsedStatus === "online" ? "Online" : "Away"}.`);
     };
+
+    const {updateOnlineStatus} = useEmployee();
+    
+
 
     return (
         <DropdownMenu>
