@@ -2,8 +2,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
-  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -31,9 +29,8 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<EmployeeDTO | null>(null);
-  const [loading, setLoading] = useState(true);
-  const hasInitialized = useRef(false);
-
+  const [loading, setLoading] = useState(false);
+  
   const fetchCurrentUser = useCallback(async (): Promise<EmployeeDTO | null> => {
     setLoading(true);
 
@@ -106,15 +103,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setLoading(false);
     }
   }, []);
-
-  useEffect(() => {
-    if (hasInitialized.current) {
-      return;
-    }
-
-    hasInitialized.current = true;
-    void fetchCurrentUser();
-  }, [fetchCurrentUser]);
 
   return (
     <AuthContext.Provider value={{ user, loading, login, logout, fetchCurrentUser }}>
