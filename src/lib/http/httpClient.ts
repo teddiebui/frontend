@@ -8,7 +8,7 @@ type ResponseInterceptor = <T>(result: APIResultSet<T>) => APIResultSet<T> | Pro
 
 const requestInterceptors: RequestInterceptor[] = [];
 const responseInterceptors: ResponseInterceptor[] = [];
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 const SCHEME = import.meta.env.VITE_SCHEME || 'http';
 // --- Helpers ---
 
